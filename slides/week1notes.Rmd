@@ -1,0 +1,202 @@
+---
+title: Public Interest Data
+subtitle: Getting Started with R
+author: "Michele Claibourn"
+date: "2024-01-22"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r load}
+# devtools::install_github("ijlyttle/vembedr")
+
+library(tidyverse)
+library(readxl)
+library(knitr)
+library(kableExtra)
+library(vembedr)
+library(RXKCD)
+```
+
+## Getting Started with R
+
+Who are we wrt R?
+
+```{r familiaR, eval=FALSE}
+roster <- read_excel("../../roster.xlsx", 
+                     sheet = 1)
+roster <- roster %>% 
+  mutate(R = fct_infreq(R))
+
+roster %>% 
+  filter(!is.na(R)) %>% 
+  ggplot(aes(x = fct_rev(R), fill = R)) + 
+  geom_bar() + 
+  coord_flip() +
+  scale_fill_viridis_d() +
+  labs(x = "", y = "") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  guides(fill = FALSE)
+```
+
+Wherever you are, you're not alone! As we begin learning R (or learning new things in R), remember...
+
+## "great frustration and much suckiness..." 
+
+```{r hadley}
+embed_youtube("8SGif63VW6E") %>% use_start_time("4m12s") %>% 
+  use_align("center") %>%
+  use_rounded(10)
+```
+
+
+## Working in R, RStudio
+
+[R is the computational engine; RStudio is the interface](https://moderndive.com/1-getting-started.html#r-rstudio)
+
+```{r  out.width = "70%"}
+knitr::include_graphics("../images/rstudio_image.png") 
+```
+
+
+## Organizing R
+Projects allow RStudio to leave notes for itself (e.g., history), will always start a new R session when opened, and will always set the working directory to the Project directory. 
+
+Create a system for [organizing the objects in this project](https://martinctc.github.io/blog/rstudio-projects-and-working-directories-a-beginner%27s-guide/)!
+
+<div style="text-align:center;"><img src="../images/file_structure.png" alt="File Structure Example" width = "30%"></div>
+
+
+## R Packages 
+
+Functions are the “verbs” that allow us to manipulate data. Packages contain functions, and all functions belong to packages.
+
+R comes with about 30 packages (“base R”). There are over 10,000 user-contributed packages; you can discover these packages online in Comprehensive R Archive Network ([CRAN](https://cran.r-project.org/)), with  more in active development on GitHub. 
+
+To use a package, install it **once**
+
+- You can install packages via point-and-click: Tools…Install Packages…Enter `tidyverse` (or a different package name) then click on Install.
+- Or you can use this command in the console: `install.packages("tidyverse")`
+
+In each new R session, you'll have to load the package if you want access to its functions: e.g., type `library(tidyverse)`.
+
+## R Basics
+
+* R is case sensitive
+* Everything in R is an object (vectors, lists, matrices, **data frames**)
+* `#` demarcates code comments
+* `<-` is the assignment operator, how we name new objects in the R environment
+
+## Reading in data
+
+R has two native data formats: 
+
+* .RDS files store a single data object: `readRDS("path/filename.RDS")`, `saveRDS(object, file = "path/filename.RDS")`
+* .RData files stores multiple data objects: `load("path/filename.Rdata")`, `save(object1, object2, file = "path/filename.RData")`, `save.image("path/filename.RData")`
+
+You can import any data format if you know the right `command`/(package):
+
+* CSV: `read.csv` (base R), `read_csv` (tidyverse)
+* Excel: `read_excel` (readxl)
+* Stata, SPSS, SAS: e.g., `read.dta` (foreign), `read_dta` (haven)
+* JSON, fixed-width, TXT, DAT, shape files, etc. 
+
+Primary data types include numeric, integer, logical, and character; plus factors.
+
+## Let's Play with R!
+
+Download R materials from today's canvas page! 
+
+```{r horst, fig.cap='Artwork by @allison_horst', fig.align="center",out.width = "50%"}
+include_graphics("../images/play_forevR.png")
+```
+
+## Some initial R commands
+
+Examining data: 
+
+* `names()`
+* `head()` and `tail()`
+* `str()`;  `glimpse()` (dplyr equivalent)
+* `summary()`
+
+These (base R) commands will operate an the full object (all variables/columns in a data frame). To access a specific variable/column, use the `$` operator: `df$varname`.
+
+## Some dplyr commands
+
+Part of the the [`tidyverse`](https://www.tidyverse.org/), [`dplyr`](https://dplyr.tidyverse.org/)  is a package for data manipulation. The package implements a *grammar* for transforming data, based on verbs/functions that define a set of common tasks.
+
+`dplyr` functions are for `d`ata frames.
+
+* first argument of `dplyr` functions is always a data frame
+* followed by function specific arguments that detail what to do
+
+[dplyr cheatsheet!](https://raw.githubusercontent.com/rstudio/cheatsheets/master/data-transformation.pdf)
+
+
+## $\color{blue}{\text{select()}}$ - extract $\color{blue}{\text{variables}}$ 
+
+```{r, eval = FALSE, echo = TRUE}
+select(.data, var1, var2, var3)
+```
+
+`select()` helpers include
+
+* `select(.data, **var1:var10**)`: select range of columns
+* `select(.data, **-c(var1, var2)**)`: select every column but
+* `select(.data, **starts_with("string")**)`: select columns that start with... (or **ends_with("string")**)
+* `select(.data, **contains("string")**)`: select columns whose names contain...
+
+## $\color{green}{\text{filter()}}$ - extract $\color{green}{\text{rows}}$
+
+```{r, eval = FALSE, echo = TRUE}
+filter(.data, var == value)
+```
+
+| Logical tests | Boolean operators for multiple conditions |
+|---------------------|-------------------------------------|
+| x **<** y: less than | a **&** b: and |
+| y **>=** y: greater than or equal to | a **\|** b: or |
+| x **==** y: equal to | **xor(**a,b**)**: exactly or |
+| x **!=** y: not equal to | **!**a: not |
+| x **%in%** y: is a member of |  |
+| **is.na(**x**)**: is NA |  |
+
+## A few more
+
+### $\color{green}{\text{arrange()}}$ - reorder $\color{green}{\text{rows}}$
+
+```{r, eval = FALSE, echo = TRUE}
+arrange(.data, var)
+arrange(.data, desc(var))
+```
+
+### $\color{blue}{\text{count()}}$ - tabulate values of $\color{blue}{\text{variables}}$ 
+
+```{r, eval = FALSE, echo = TRUE}
+count(.data, var)
+```
+
+
+## Pipes!
+The pipe (`%>%`) allows you to chain together functions by passing (piping) the result on the left into the first argument of the function on the right. It allows us to call a series of functions in sequence (read the pipe as "and then...").
+
+```{r, eval = FALSE, echo = TRUE}
+dataframe %>% 
+  filter(var1 > 0) %>% 
+  select(var1, var2, var3) 
+```
+
+#### Keyboard shortcut to create `%>%`
+
+* Mac: cmd + shift + m
+* Windows: ctrl + shift + m
+
+
+
