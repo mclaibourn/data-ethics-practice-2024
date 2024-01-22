@@ -28,15 +28,15 @@ library(RXKCD)
 
 Who are we wrt R?
 
-```{r familiaR, eval=FALSE}
-roster <- read_excel("../../roster.xlsx", 
-                     sheet = 1)
+```{r familiaR, fig.height = 3, fig.align='center'}
+roster <- read_excel("../../roster2024.xlsx", 
+                     sheet = 2)
 roster <- roster %>% 
-  mutate(R = fct_infreq(R))
+  mutate(expR = fct_infreq(expR))
 
 roster %>% 
-  filter(!is.na(R)) %>% 
-  ggplot(aes(x = fct_rev(R), fill = R)) + 
+  filter(!is.na(expR)) %>% 
+  ggplot(aes(x = fct_rev(expR), fill = expR)) + 
   geom_bar() + 
   coord_flip() +
   scale_fill_viridis_d() +
@@ -140,7 +140,7 @@ Part of the the [`tidyverse`](https://www.tidyverse.org/), [`dplyr`](https://dpl
 [dplyr cheatsheet!](https://raw.githubusercontent.com/rstudio/cheatsheets/master/data-transformation.pdf)
 
 
-## $\color{blue}{\text{select()}}$ - extract $\color{blue}{\text{variables}}$ 
+## `select()` - extract variables
 
 ```{r, eval = FALSE, echo = TRUE}
 select(.data, var1, var2, var3)
@@ -153,7 +153,7 @@ select(.data, var1, var2, var3)
 * `select(.data, **starts_with("string")**)`: select columns that start with... (or **ends_with("string")**)
 * `select(.data, **contains("string")**)`: select columns whose names contain...
 
-## $\color{green}{\text{filter()}}$ - extract $\color{green}{\text{rows}}$
+## `filter()` - extract rows
 
 ```{r, eval = FALSE, echo = TRUE}
 filter(.data, var == value)
@@ -170,14 +170,14 @@ filter(.data, var == value)
 
 ## A few more
 
-### $\color{green}{\text{arrange()}}$ - reorder $\color{green}{\text{rows}}$
+### `arrange()` - reorder rows
 
 ```{r, eval = FALSE, echo = TRUE}
 arrange(.data, var)
 arrange(.data, desc(var))
 ```
 
-### $\color{blue}{\text{count()}}$ - tabulate values of $\color{blue}{\text{variables}}$ 
+### `count()` - tabulate values of variables
 
 ```{r, eval = FALSE, echo = TRUE}
 count(.data, var)
