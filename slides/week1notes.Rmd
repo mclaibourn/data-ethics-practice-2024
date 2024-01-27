@@ -148,10 +148,10 @@ select(.data, var1, var2, var3)
 
 `select()` helpers include
 
-* `select(.data, **var1:var10**)`: select range of columns
-* `select(.data, **-c(var1, var2)**)`: select every column but
-* `select(.data, **starts_with("string")**)`: select columns that start with... (or **ends_with("string")**)
-* `select(.data, **contains("string")**)`: select columns whose names contain...
+* `select(.data, var1:var10)`: select range of columns
+* `select(.data, -c(var1, var2))`: select every column but
+* `select(.data, starts_with("string"))`: select columns that start with... (or ends_with("string"))
+* `select(.data, contains("string"))`: select columns whose names contain...
 
 ## `filter()` - extract rows
 
@@ -161,12 +161,12 @@ filter(.data, var == value)
 
 | Logical tests | Boolean operators for multiple conditions |
 |---------------------|-------------------------------------|
-| x **<** y: less than | a **&** b: and |
-| y **>=** y: greater than or equal to | a **\|** b: or |
-| x **==** y: equal to | **xor(**a,b**)**: exactly or |
-| x **!=** y: not equal to | **!**a: not |
-| x **%in%** y: is a member of |  |
-| **is.na(**x**)**: is NA |  |
+| `x < y`: less than | `a & b`: and |
+| `y >= y`: greater than or equal to | `a | b`: or |
+| `x == y`: equal to | `xor(a,b)`: exactly or |
+| `x != y`: not equal to | `!a`: not |
+| `x %in% y`: is a member of |  |
+| `is.na(x)`: is NA |  |
 
 ## A few more
 
