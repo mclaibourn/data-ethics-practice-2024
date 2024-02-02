@@ -1,0 +1,102 @@
+---
+title: Public Interest Data
+subtitle: Visualization in R with ggplot2
+author: "Michele Claibourn"
+date: "2024-02-05"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## 
+
+```{r muppet, fig.align = "center", out.height = "600px"}
+knitr::include_graphics("https://pbs.twimg.com/media/F6GnWj2WoAAMyCA.jpg:small")
+```
+
+
+## ggplot2: Mapping Aesthetics
+
+The Grammar of Graphcis: All data visualizations map **data** to **aes**thetic attributes (location, shape, color) of **geom**etric objects (lines, points, bars)
+
+- Quantitative (continuous, discrete, time) mapped to position, shape size/line width, color, transparency, ...
+- Qualitiative (ordered, unordered, text) mapped to position, shape/line type, color
+
+**Scale**s control the mapping from data to aesthetics and provide
+tools to read the plot (axes, legends). Geometric objects are drawn in a specific **coord**inate system.
+
+A plot can contains **stat**istical transformations of the data (counts, means, medians) and **facet**ing can be used to generate the same plot for different
+subsets of the data.
+
+## Resources 
+
+References!
+
+* [ggplot2 website](https://ggplot2.tidyverse.org/)
+* [ggplot2 cheat sheet](https://raw.githubusercontent.com/rstudio/cheatsheets/main/data-visualization.pdf)
+* [The R Graph Gallery](https://r-graph-gallery.com/)
+* [Awesome ggplot2: A curated list of awesome ggplot2 tutorials, packages etc.](https://github.com/erikgahner/awesome-ggplot2)
+
+Books!
+
+* Hadley Wickham, [ggplot2: Elegant Graphics for Data Analysis](https://ggplot2-book.org/index.html)
+* Kieran Healy, [Data Visualization: A practical introduction](https://socviz.co/)
+* Robert Kabacoff, [Modern Data Visualization with R](https://rkabacoff.github.io/datavis/)
+* Claus O. Wilke, [Fundamentals of Data Visualization](https://clauswilke.com/dataviz/)
+
+## Basic Syntax
+
+```{r basic, eval = FALSE, echo = TRUE}
+ggplot(.data, aes(x=, y=, color=, shape=, size=)) +
+  geom_point() # or geom_histogram() or geom_boxplot() or geom_line() or geom_bar(), etc.
+```
+
+* The data must be a data frame
+* `aes()` maps variables in the data frame to aesthetic properties to be plotted
+* `ggplot()` defines the plot; the `geoms_()` show the data
+* layers are added with `+`
+
+
+## Basic Syntax, example
+
+```{r, eval = FALSE, echo = TRUE}
+ggplot(data, aes(x = var1, y = var2)) +
+  geom_point(aes(color = var3)) +
+  geom_smooth(color = "red") +
+  labs(title = "Helpful Title", 
+       x = "x-axis label")
+```
+
+- Building layers (data, geoms, scales, labels, etc.)
+- Mapping (geom-specific) versus setting (global) aesthetics
+
+
+## Beyond `ggplot` + `geoms`
+
+* Create small multiples based on subsets of data: 
+  - `facet_wrap()`
+  - `facet_grid()`
+* Modify the coordinate system: 
+  - `coord_cartesian` allows us to zoom in on a plot
+  - `coord_flip` allows us to flip the x and y axis
+
+## Let's Play with R!
+
+Download R materials from today’s canvas page!
+
+<br>
+
+```{r xkcd2, fig.align = "center", width = "100%", fig.cap = "https://xkcd.com/833/"}
+knitr::include_graphics("https://imgs.xkcd.com/comics/convincing.png")
+```
+
+<br>
+
+<center>
+[ggplot2 cheatsheet!](https://raw.githubusercontent.com/rstudio/cheatsheets/main/data-visualization.pdf)
+</center>
