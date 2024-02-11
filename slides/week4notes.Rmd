@@ -1,0 +1,114 @@
+---
+title: Public Interest Data
+subtitle: More Data Visualization and R Markdown
+author: "Michele Claibourn"
+date: "2024-02-12"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Happy Valentine's Day
+
+```{r xkcd1, fig.align = "center", width = "120%", fig.cap = "https://xkcd.com/523/"}
+knitr::include_graphics("https://imgs.xkcd.com/comics/decline.png")
+```
+
+## forcats 
+
+The [`forcats`](https://forcats.tidyverse.org/) package provides helper functions for working with factors.
+
+Good for changing data via mutate (and others)
+
+* **fct_lump_n()**: collapse least/most frequent levels of factor into "other"
+* **fct_collapse()**: collapse factor levels into defined groups
+* **fct_recode()**: change factor levels by hand
+* **fct_relevel()**: change order of factor levels by hand
+
+Good for changing factors on the fly in ggplot
+
+* **fct_infreq()**: reorder factor levels by frequency of levels
+* **fct_reorder()**: reorder factor levels by another variable
+* **fct_rev()**: reverse the order of the factor levels
+
+## Comparing distributions
+Beyond histograms
+
+* Density plot: estimate the probability distribution of data with a curve
+* Ridge plot: compare multiple density plots
+* Box plot: show specific statistical summaries of a distribution
+* Violin plot: compare multiple distributions/density plots
+* Strip chart: show all the points, not just estimated distributions or statistical summaries
+* Sina plot: an advanced strip chart, where the width of the jitter is controlled by the density distribution
+
+<!-- https://z3tt.github.io/beyond-bar-and-box-plots/#boxplot -->
+
+## Comparing values
+Beyond bar charts
+
+* Dot plots: show the final value, not the whole bar
+* Lollipop plots: add the line to the 0 point
+* Dumbell plots: compare two values for each group
+
+## R Markdown
+R Markdown creates dynamic documents by combining markdown (an easy to write plain text format) with embedded R code chunks. When compiled, the code can be evaluated so that the code, its output, and your prose can be included in the final document to make reports reproducible.
+
+* R Markdown documents (.Rmd files) can be rendered to multiple formats including HTML and PDF. 
+* The R code in an .Rmd document is processed by knitr, while the resulting .md file is rendered by pandoc to the final output formats (e.g. HTML or PDF).
+
+## .Rmd file: YAML 
+
+* A YAML header (yet-another-markup-language), offset by `----`
+  - A good review of [YAML headers](https://zsmith27.github.io/rmarkdown_crash-course/lesson-4-yaml-headers.html)
+  - Should include: Title/subtitle, author, date
+  - Additional arguments: (Floating) Table of contents and code folding
+  
+```{r, echo = TRUE, eval = FALSE}
+----
+title: "An incredible project"
+subtitle: "Of great significance"
+author: "Don't you know who I am?"
+date: "2023-02-16"
+output: html_document
+----
+```
+
+## .Rmd file: Text
+
+* Text with markdown formatting
+  - A markdown format [cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
+  - Common formatting: adding headers, adding emphasis, creating lists, creating links, etc.
+
+## .Rmd file: R code
+
+* Chunks of R code, offset by ``` (keyboard shortcut: Cmd/Ctrl + Opt/Alt + I)
+  - knitr [code chunk options](https://yihui.org/knitr/options/)
+  - `name` (to identify code chunk)
+  - `echo = TRUE` (show code in document)
+  - `message = FALSE`, `warning = FALSE` (prevent messages, warnings from appearing)
+  - `fig.height = X, fig.width = X, fig.cap = "caption below the figure"` (control size of generated figure, presence of figure caption)
+
+  ````markdown
+`r ''````{r codechunkname, warning = FALSE, fig.height = 10}
+# add code here
+```
+````
+  - `knitr::opts_chunk$set()` (set global options, usually in first code chunk) 
+
+## R Markdown Resources
+
+* See Wickham and Grolemund's [Chapter 27 in R4DS](https://r4ds.had.co.nz/r-markdown.html) for key details!
+* [RStudio's reference collection](https://rmarkdown.rstudio.com/articles.html)
+* See Yihui Xie's [comprehensive book](https://bookdown.org/yihui/rmarkdown/) for everything you could ever want to know about R Markdown
+* [R Markdown cheat sheet](https://raw.githubusercontent.com/rstudio/cheatsheets/master/rmarkdown.pdf)
+
+## Let's Play with R!
+
+Download R script from today’s canvas page!
+
+<div style="text-align:center;"><img src="https://media1.tenor.com/m/pnK2MIoEAccAAAAC/hadley-wickham.gif" width="480">
