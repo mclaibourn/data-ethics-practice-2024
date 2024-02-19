@@ -1,0 +1,120 @@
+---
+title: Public Interest Data
+subtitle: Joins in R and Colors in ggplot2
+author: "Michele Claibourn"
+date: "2024-02-19"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(viridis)
+library(ghibli)
+library(scales)
+
+pal <- function(col, border = "light gray", ...)
+  {
+  n <- length(col)
+  plot(0, 0, type="n", xlim = c(0, 1), ylim = c(0, 1),
+       axes = FALSE, xlab = "", ylab = "", ...)
+  rect(0:(n-1)/n, 0, 1:n/n, 1, col = col, border = border)
+  }
+```
+
+## Join: Full
+
+Joins merge data sets based on key variables. The syntax is always `name_join(x, y, by = "key")`
+
+Animated visuals created by [Garrick Aden-Buie](https://github.com/gadenbuie/tidyexplain)
+
+* `full_join()`: keeps all observations in x and y
+
+```{r full, out.width = "30%"}
+knitr::include_graphics("https://raw.githubusercontent.com/gadenbuie/tidyexplain/master/images/full-join.gif")
+```
+
+## Join: Left, Right
+
+* `left_join()`: keeps all observations in x
+
+```{r left, out.width = "30%"}
+knitr::include_graphics("https://raw.githubusercontent.com/gadenbuie/tidyexplain/master/images/left-join.gif")
+```
+
+* `right_join()`: keeps all observations in y
+
+## Join: Inner
+
+* `inner_join()`: keeps observations in both x and y
+
+```{r inner, out.width = "30%"}
+knitr::include_graphics("https://raw.githubusercontent.com/gadenbuie/tidyexplain/master/images/inner-join.gif")
+```
+
+## Colors: Discrete
+
+Color used to distinguish groups requires a qualitative color scale that is
+
+* finite and unordered
+* readily distinguished
+* approximately equivalent
+
+```{r rainbow, fig.height = 3}
+#show_col(rainbow(6))
+pal(rainbow(7), main = "Base: Rainbow")
+```
+
+## Colors: Continuous
+
+Color used to representing values or comparative magnitude requires a sequential color scheme that 
+
+* uses a many-valued gradient to distinguish larger/smaller values
+* represets the distance between values
+* may be single-hued, multi-hued, diverging
+
+```{r viridis, fig.height = 3}
+#show_col(viridis_pal()(16))
+pal(viridis_pal()(16), main = "Viridis:viridis")
+```
+
+## Colors: Highlight
+
+Color to highlight a group or threshold value requires accent colors that
+
+* stands out/pops relative to the rest of the colors
+* may be a single color against grey backdrop
+* may be baed on intensity of colors in color scale
+
+```{r ghibli, fig.height = 3}
+#show_col(ghibli_palette("KikiLight", 4))
+pal(ghibli_palette("KikiLight", 4), main = "Ghibli:KikiLight")
+```
+
+## Colors: Tips and Resources
+
+Potential pitfalls
+
+1. Encoding too much information (e.g., more than 5 to 8 groups)
+    - Labeling points is an alternative
+2. Coloring for the sake of coloring
+   - And using oversaturated colors
+3. Using non-monotonic scales for values (e.g., the rainbow scale)
+4. Ignoring accessibility (e.g., color perception)
+
+Emil Hvitfeldt's color resources
+
+* [Comprehensive list of color palettes in R!](https://github.com/EmilHvitfeldt/r-color-palettes)
+* [paletteer package](https://cran.r-project.org/web/packages/paletteer/index.html)
+
+
+## Let's Play with R!
+
+Download R script from today’s canvas page!
+
+```{r, fig.align = 'center', out.width = "50%", fig.cap='Artwork by @allison_horst'}
+knitr::include_graphics("../images/horst_errorR.png")
+```
