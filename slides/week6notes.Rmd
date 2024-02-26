@@ -1,0 +1,56 @@
+---
+title: Public Interest Data
+subtitle: Separate/Unite in R and Scales in ggplot2
+author: "Michele Claibourn"
+date: "2024-02-26"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Separate
+`separate`: Split a single column into multiple columns by separating each cell in the column into a row of cells.
+
+```{r sep, out.width = "50%"}
+knitr::include_graphics("../images/tidyr-seperate.png")
+```
+
+`separate(df, col = rate, into = c("cases", "pop"), sep = "/")`
+
+
+## Unite
+
+`unite`: Combine several columns into a single column by uniting their values across rows.
+
+```{r uni, out.width = "50%"}
+knitr::include_graphics("../images/tidyr-unite.png")
+```
+
+`unite(df, col = year, century:year, sep = "")`
+
+## More Scales
+
+Controlling x,y scales in ggplot
+
+* Discrete scales
+  - limits, breaks, labels
+  - guides
+* Continuous scales
+  - limits, breaks, labels
+  - transformations
+* Scales package: https://scales.r-lib.org/
+  - label (e.g., currency, comma, percent)
+  - transform
+
+## Let's Play with R!
+
+Download R script from today’s canvas page!
+
+```{r, fig.align = 'center', fig.cap='XKCD, Randall Munroe, https://xkcd.com/2494/'}
+knitr::include_graphics("https://imgs.xkcd.com/comics/flawed_data.png")
+```
