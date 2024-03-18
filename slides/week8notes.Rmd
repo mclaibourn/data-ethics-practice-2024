@@ -1,0 +1,49 @@
+---
+title: Public Interest Data
+subtitle: Data Tables and More R Markdown
+author: "Michele Claibourn"
+date: "2024-03-18"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Data Tables
+
+A variety of packages for generating tables in R
+
+* `kable` and `kableExtra`: build complex, formatted tables, [Learn more](https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html)
+* `DT`: tables with filtering, sorting, and other interactivity, [Learn more](https://rstudio.github.io/DT/)
+* `reactable`: tables with filtering, sorting, and other interactivity plus many formatting options, [Learn more](https://glin.github.io/reactable/index.html) -- we'll come back to this one later
+
+## R Markdown: Expanding the YAML
+
+* A YAML header (yet-another-markup-language), offset by `----`
+  - A good review of [YAML headers](https://zsmith27.github.io/rmarkdown_crash-course/lesson-4-yaml-headers.html)
+  - Additional arguments: (Floating) Table of contents and code folding
+  
+```{r, echo = TRUE, eval = FALSE}
+---
+title: "An incredible project"
+subtitle: "Of great significance"
+author: "Don't you know who I am?"
+date: "2023-02-19"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    code_folding: hide
+---
+```
+
+## Let's Play with R!
+
+```{r, fig.align = 'center', fig.cap='XKCD, Randall Munroe, https://xkcd.com/2502'}
+knitr::include_graphics("https://imgs.xkcd.com/comics/every_data_table.png")
+```
