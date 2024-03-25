@@ -1,0 +1,66 @@
+---
+title: Public Interest Data
+subtitle: Dates, Strings, and R Markdown Themes
+author: "Michele Claibourn"
+date: "2024-03-25"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Dates and times with lubridate
+
+Dates, times, and date-times can be ambiguous (and learning the POSIXct, the date-time class for calendar time, can be painful. The [lubridate](https://lubridate.tidyverse.org/) package makes working with these complex objects a little easier, including:
+
+* Functions for making (parsing) date, time, or date-time structures: e.g.,  `ymd()`, `hms()`, `ymd_hms()`, `make_date()`
+* Functions for extracting components from date-time structures: e.g., `year()`, `month()`, `day()`, `wday()`, `mday()`, `yday()`
+* Functions for doing math on date-time structures to calculate intervals, period, and durations: `interval()`, `period()`, `duration()`, `ddays()`
+
+For more, review the [Dates and Times](https://r4ds.hadley.nz/datetimes.html) chapter in R4DS, read [this blogpost](https://library.virginia.edu/data/articles/working-with-dates-and-time-in-r-using-the-lubridate-package) from the UVA Statlab, or refer to this [lubridate cheatsheet](https://rstudio.github.io/cheatsheets/html/lubridate.html)
+
+## Strings with stringr
+
+Working with characters or strings is also a pain. The [stringr](https://stringr.tidyverse.org/) package is meant to make R’s string functions more consistent, simpler and easier to use, including
+
+* Functions to manipulate characters within strings: `str_length(s)`, `str_to_upper(s)`, `str_to_lower(s)`, `str_c(s1,s2)`, `str_split(s, split)`, `str_sub(s, start, end)` 
+* Functions to manipulate white space within strings: `str_pad(s, n)`, `str_trim(s)`, `str_wrap(s, width)`
+* Functions to match patterns within strings: `str_detect(s, p)`, `str_locate(s, p)`, `str_extract(s, p)`, `str_replace(s, p)`, `str_subset(s, p)`, `str_view(s, p)`, `str_count(s, p)`
+
+For more, review the [Strings](https://r4ds.had.co.nz/strings.html) chapter of R4DS, check out this [stringr basics](https://www.gastonsanchez.com/r4strings/stringr-basics.html) chapter, or refer to this [stringr cheatsheet](https://rstudio.github.io/cheatsheets/html/strings.html) 
+
+## R Markdown: Themes
+
+We can use themes to customize the appearance of R markdown documents. [Themes](https://bookdown.org/yihui/rmarkdown/html-document.html#appearance-and-style) determine the font styles, colors, margins, and other visual elements, and there are several pre-defined themes available.
+
+```{r, echo = TRUE, eval = FALSE}
+---
+title: "An incredible project"
+subtitle: "Of great significance"
+author: "Don't you know who I am?"
+date: "2023-03-25"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+```
+
+## R Markdown: Themes
+
+The built-in R markdown themes are from the [Bootswatch](https://bootswatch.com/3/) theme library: default, bootstrap, cerulean, cosmo, darkly, flatly, journal, lumen, paper, readable, sandstone, simplex, spacelab, united, and yeti.
+
+* Or download a package that provides themes: [prettydoc](https://prettydoc.statr.me/index.html), [rmdformats](https://cran.r-project.org/web/packages/rmdformats/readme/README.html); also [tufte](https://github.com/rstudio/tufte) and [tint](https://github.com/eddelbuettel/tint)
+* Or, if you know some css, you can [define your own](https://bookdown.org/yihui/rmarkdown/html-document.html#custom-css)
+
+## Let's Play with R!
+
+```{r, fig.align = 'center', fig.cap='XKCD, Randall Munroe, https://xkcd.com/1638'}
+knitr::include_graphics("https://imgs.xkcd.com/comics/backslashes.png")
+```
