@@ -1,0 +1,98 @@
+---
+title: Public Interest Data
+subtitle: Spatial Data and Mapping in R
+author: "Michele Claibourn"
+date: "2024-04-01"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Spatial Data and R
+
+R for geocomputation, or using R as a GIS, to perform spatial operations on geographic data. There is a growing [spatial ecosystem](https://cran.r-project.org/web/views/Spatial.html) for
+
+* making maps
+* performing spatial data operations (joining, intersecting, aggregating, etc.)
+* performing geometry operation (centroids, buffers, unions, etc.)
+
+And so much more!
+
+Resources to learn more
+
+* [Geocomputation with R](https://r.geocompx.org/)
+* [R as GIS for Economists](https://tmieno2.github.io/R-as-GIS-for-Economists/index.html)
+* [Spatial Data Science with Applications in R](https://r-spatial.org/book/)
+
+## Some Foundational Terms
+
+Data is either vector or raster
+
+* vector data represents the world using points, lines and polygons
+* raster data divides the surface up into cells of constant size
+
+Coordinate Reference System (CRS) defines how the spatial elements of the data relate to the surface of the Earth
+
+* geographic: longitude (east-west) and latitude (north-south) represented on an ellipsoidal or spherical surface
+* projected: based on Cartesian coordinates on an implicitly flat surface; map projections convert a three-dimensional surface into a plane
+
+The CRS of your data is something you must know (even if you don't really know what it means) -- usually with reference to [the ‘authority:code’ string](https://spatialreference.org/ref/).
+
+## The sf package
+
+sf (simple features) can represent common vector geometry types, stored in geometry column
+
+```{r, fig.align = 'center', out.width = "30%"}
+knitr::include_graphics("https://r.geocompx.org/figures/sf-classes.png")
+```
+
+A few key functions (for today):
+
+* `st_read()`, `st_as_sf()`, `st_crs()`, `st_transform()`, `geom_sf()`, `st_filter()`
+
+## Choropleths
+
+Choropleth maps show geographical regions colored, shaded, or graded according to some variable.
+
+When to use?
+
+* data are attached to spatial units, e.g., enumeration units like census tracts or government jurisdictions;
+* data standardized to show rates or ratios; don't use raw counts
+
+Other spatial visualization options
+
+* dot-density maps (can map counts, not tied to enumeration units), 
+* proportional symbols (can map counts, attach data to precise points, size of enumeration unit less consequential), 
+* cartograms
+* More on [choropleths and alternative visualizations](https://www.axismaps.com/guide/choropleth)
+
+## Choropleths: Continuous or Classified
+
+* Unclassed or continuous color gradient
+* Create classes (usually 3-7) based on
+  + Equal intervals: divide data into equal intervals (likely unequal observations)
+  + Percentiles: divide data into equally-sized groups (likely unequal widths)
+  + Natural breaks (Jencks): algorithm to find natural groupings based on distribution of data, reduces varation within each class (likely unequal widths and observations)
+  + Manual breaks: generally tied to how the data will be used (e.g., categorizing outcomes into tiers)
+  + More on [classification choices](https://storymaps.arcgis.com/stories/871fe556c40b4d40b7a465c6f135ac88)
+
+As Healey notes: "The first thing you should remember about spatial data is that you don’t have to represent it spatially." And, in  general, choropleths are useful for showing spatial variation in one variable at a time. 
+
+## Let's Play with R!
+
+```{r, fig.align = 'center', fig.cap='XKCD, Randall Munroe, https://xkcd.com/1138/'}
+knitr::include_graphics("https://imgs.xkcd.com/comics/heatmap.png")
+```
+
+## Next week's agenda
+
+* R session
+* Break out into team clusters. Each team will have time to present their work so far -- the choices they've made, what they are seeing, ideas for next steps -- answer questions from peers, and invite feedback on how to make the project stronger. *Come prepared to show you work!*
+* Talk within your team about the projects you reviewed and summarize your collective feedback, including additional issues raised in your internal conversation, in writing (emailed to the team and to me). 
+* Spend remaining time on your own project
+* Also, annotated bibliographies are due by the end of the day!
