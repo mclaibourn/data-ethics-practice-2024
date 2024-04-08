@@ -1,0 +1,81 @@
+---
+title: Public Interest Data
+subtitle: "Odds and Ends: Census data, arranging figures, R markdown"
+author: "Michele Claibourn"
+date: "2024-04-08"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## American Community Survey data and tidycensus
+
+The [tidycensus](https://walker-data.com/tidycensus/) package by Kyle Walker and Matt Herman makes the process of acquiring and working with US Census Bureau population data in R much simpler. 
+
+In addition to installing the package, you need to acquire and set their Census API key. Go to https://api.census.gov/data/key_signup.html to obtain an API key; once you've received it in your email, tell R about it like so (you only need to install it once -- don't add your key to the scripts you share).
+
+```{r, eval = FALSE, echo = TRUE}
+library(tidycensus)
+# census_api_key("YOUR KEY GOES HERE", install = TRUE)
+```
+
+## tidycensus 
+
+Getting  [American Community Survey's](https://www.census.gov/programs-surveys/acs) 5-year (and 1-year) estimates with the `get_acs()` function.
+
+```{r, eval = FALSE, echo = TRUE}
+get_acs(
+  geography = "county", # this determines what spatial geography you want
+  variables = c("var1", "var2"), # these are variable IDs 
+  state = "51", # this is the state fips code for Virginia
+  county = c("003", "540)"), # the county fips codes for Charlotteville and Albemarle
+  survey = "acs5", # for five-year estimates
+  year = 2022, # survey ending in 2022 (2018-2022)
+  output = "tidy" # the default format
+  )
+```
+
+`tidycensus` can be used to pull decennial census data (`get_decennial()`), population estimates data (`get_estimates()`), and a few other sources. 
+
+## ACS geography, ACS variables
+
+* [Geography options](https://walker-data.com/census-r/an-introduction-to-tidycensus.html#geography-and-variables-in-tidycensus) include states, counties, tracts, and more.
+* Finding variable ids requires knowing what table the variables are in and knowing what cell the variables are in within that table.
+    + Finding tables takes some getting used to, but a good resource is the [Census Reporter](https://censusreporter.org/) site.
+    + With a table number in mind, it can be helpful to look for that table at the [data.census.gov](https://data.census.gov/) site
+    + And `tidycensus` provides a `load_variables()` function to drill down for variable IDs within a table -- [worth reading more about!](https://walker-data.com/census-r/an-introduction-to-tidycensus.html#searching-for-variables-in-tidycensus)
+
+For more on tidycensus, see Walker's [Analyzing US Census Data](https://walker-data.com/census-r/index.html)
+
+## Combining figures with patchwork
+
+`patchwork` is meant to make combining multiple ggplots into one graphic simple. 
+
+* You can put plots next to each other (`+`), stack them (`\`), and construct various combinations 
+* You can add common titles (`plot_annotation()`), aggregate legends (`plot_layout()`), add inset plots (`inset_element()`) and more 
+
+Read the [patchwork pages](https://patchwork.data-imaginist.com/index.html) for more
+
+## Figure appearance in R markdown 
+
+There are muliple code chunk options availalbe to control elements of figures
+
+* `fig.height` and `fig.widght`: size of the plot in inches (default is 7)
+* `fig.cap`: caption for plot (also `fig.alt` for alt text)
+* `fig.align`: center, left, right alignment
+
+If you're adding existing images to an R markdown
+
+* use `include_graphics()` within a code chunk
+* use `out.width` and `out.height` to control size, scaled to output size (units can be in pixels/px or percent/%)
+
+## Let's Play with R!
+
+```{r, fig.align = 'center', out.width = "75%", fig.cap='Artwork by @allison_horst'}
+knitr::include_graphics("../images/horst_debugging.jpg")
+```
