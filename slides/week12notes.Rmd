@@ -1,0 +1,138 @@
+---
+title: Public Interest Data
+subtitle: "Getting Fancy with R: Interative visualization and tables"
+author: "Michele Claibourn"
+date: "2024-04-15"
+output: 
+  ioslides_presentation:
+    logo: ../images/pid_hex2.png
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r libraries}
+# Load libraries
+library(tidyverse)
+library(scales)
+library(ggthemes)
+library(ggimage)
+library(plotly)
+library(reactable)
+library(reactablefmtr)
+library(rcartocolor)
+```
+
+```{r data}
+# Read data 
+cvl_per <- readRDS("../data/cvl_per_prepped.RDS")
+```
+
+## Adding images to viz
+
+There are multiple ways we can add (potentially humanizing) images to visualizations, including
+
+* Add background images to figures
+* Use images as points
+* Use images in axes, to represent different attributes
+
+A good (quick) video demonstrating some of these approaches by [Albert Rapp](https://www.youtube.com/watch?utm_source=3mw.albert-rapp.de&utm_medium=newsletter&utm_campaign=3mw-using-parametrized-reports-instead-of-shiny&v=mKOQCMlNnt0&feature=youtu.be).
+
+## ggimage::geom_image() example
+
+```{r image, fig.align = "center"}
+# image behind figure
+med_wage <- cvl_per %>% 
+  filter(worker_class != "other") %>% 
+  group_by(worker_class) %>% 
+  summarize(total = n(),
+            med_wage = median(wages, na.rm = TRUE))
+
+cvl_per %>% 
+  filter(worker_class != "other",
+         wages < 500000) %>% 
+  ggplot(aes(x = worker_class, y = wages, color = worker_class)) +
+  # add image here (before points so points are layed on top)
+  geom_image(data = tibble(worker_class = "gov_local", wages = 250000),
+             aes(image = "../images/people.png"), nudge_x = 0.5,
+             size = 1.5, color = "grey", alpha = 1/2) +
+  geom_jitter(alpha = 1/3) +
+  scale_color_manual(values = 
+                       c("#F28E2B", "#E15759", "#4E79A7", "#76B7B2", "#59A14F", "#EDC948"), 
+                     guide = "none") +
+  scale_x_discrete(labels = str_to_title(levels(cvl_per$worker_class))) +
+  scale_y_continuous(labels = label_currency(), limits = c(0,5e+05),
+                     breaks = c(5e+04, 1.5e+05, 2.5e+05, 3.5e+05, 4.5e+05)) +
+  geom_point(data = med_wage, aes(y = med_wage), color = "gray30", size = 3) +
+  labs(title = "Salaries of Government Employees", 
+       subtitle = "Greater Charlottesville Region",
+       caption = "American Community Survey 5-Year Estimates",
+       x = "", y = "") +
+  annotate("text", x = 0.7, y = 2e+05, label = "Median", size = 3, color = "gray30") +
+  annotate("curve", x = 0.8, y = 1.8e+05, xend = 1, yend = 45000, color = "gray30",
+           curvature = 0.3, arrow = arrow(length = unit(0.25, 'cm'))) +
+  theme_minimal()
+```
+
+## Interactive viz
+
+The [plotly package](https://cran.r-project.org/web/packages/plotly/index.html) provides a way of using the [plotly.js library](https://plotly.com/r/) within R
+
+* By creating a plotly object with `plot_ly()`
+* By transforming a ggplot object via `ggplotly()`
+
+`ggplotly()` provides a lot of the functionality of `plot_ly()` without learning the details of `plot_ly()`. Because `ggplotly()` returns a `plot_ly()` object, though, it can be modified with additional `plot_ly()` options.
+
+See [Carson Sievert's book](https://plotly-r.com/) for more, especially [Chapter 2](https://plotly-r.com/overview) and [Chapter 33](https://plotly-r.com/improving-ggplotly)!
+
+## plot_ly::ggplotly() example
+
+```{r plotly, fig.align = "center"}
+fig <- cvl_per %>% 
+  filter(!is.na(educ_att), 
+         !is.na(worker_class),
+         worker_class != "other") %>% 
+  group_by(worker_class, educ_att) %>% 
+  summarize(med_wages = median(wages, na.rm = TRUE)) %>% 
+  ggplot(aes(x = educ_att, y = med_wages, 
+             color = worker_class, group = worker_class,
+             text = paste("Type of Work: ", worker_class, "<br>",
+                          "Educational Attainment: ", educ_att, "<br>",
+                          "Median wages: ", med_wages))) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Educational Attainment", y = "Median Wages") +
+  scale_color_manual(values = 
+                       c("#F28E2B", "#E15759", "#4E79A7", "#76B7B2", "#59A14F", "#EDC948"), 
+                     guide = "none") +
+  scale_y_continuous(labels = label_currency()) +
+  scale_x_discrete(labels = c("No HS\nDeg", "HS\nGrad", "Some\nCollege", 
+                              "College\nGrad", "Masters\nDeg", "Doctoral\nDeg")) +
+  theme_minimal() +
+  theme(legend.position='none')
+
+ggplotly(fig, tooltip = c("text")) 
+```
+
+## Interactive tables
+
+The [reactable package](https://glin.github.io/reactable/) provides a way of using the React Table JavaScript library within R
+
+* Has interactive functionality (sorting, filtering) like DT::datatable()
+* With more formatting and conditionaly styling like kableExtra
+
+With additional and simplified formatting and customization provided in the [reactablefmtr package](https://kcuilla.github.io/reactablefmtr/).
+
+## Let's Play with R!
+
+```{r, fig.align = 'center', out.width = "50%"}
+knitr::include_graphics("https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/239259667_4530293423689580_4690941474829864431_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=5f2048&_nc_ohc=MODPdQWJarQAb5iW85H&_nc_ht=scontent-iad3-2.xx&oh=00_AfBLtZVG5Ov4kqsmvEbOLpQl5s_mFrOBk9dBZccdq21pUQ&oe=661F4D4B")
+```
+
+## Don't forget to comment your code!
+
+```{r, fig.align = 'center', out.width = "50%"}
+knitr::include_graphics("https://i.redd.it/iuy9fxt300811.png")
+```
