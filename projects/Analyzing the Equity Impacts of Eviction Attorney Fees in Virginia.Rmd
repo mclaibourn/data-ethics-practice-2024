@@ -1,0 +1,465 @@
+---
+title: "Analyzing the Equity Impacts of Eviction Attorney Fees in Virginia"
+author: "Sarah Boches and Sophie McGinley"
+date: "2024-05-03"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    theme: flatly
+    css: styles.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Background
+Evictions are a serious problem in Virginia, with statewide eviction rates twice the national average and over five times as high in some localities. Evictions disproportionately impact Black and Brown communities. In Richmond, the racial composition of neighborhoods is the strongest predictor of eviction rates, with higher shares of Black residents correlating with higher eviction rates. This reflects long-standing racial disparities in housing stability rooted in the history of segregation and discrimination.
+
+A key factor shaping eviction outcomes is access to legal representation. While most landlords have attorneys in eviction cases, very few tenants do. Residential tenants facing eviction rarely can afford to hire attorneys, and legal aid programs lack funding to represent most tenants in need. Studies show that tenants with legal representation are significantly less likely to be evicted.
+
+One barrier to expanding tenant representation is that most leases require tenants to pay landlord attorney fees if the landlord wins an eviction case, but do not give tenants the reciprocal right to recoup fees if they prevail. This one-sided fee shifting discourages attorneys from representing tenants.
+
+In 2019, Virginia enacted several reforms to make eviction laws fairer for tenants, including a provision allowing tenants to recover attorney fees if they win an eviction case. The goal was to level the playing field and encourage more attorneys to represent tenants. However, attorney fee award amounts are left to the court's discretion and can vary widely.
+
+## Language Used in the Analysis
+In this analysis, we use legal terminology to accurately represent the parties involved in eviction cases. The term "plaintiff" refers to the party initiating the lawsuit, which, in the context of evictions, is typically the landlord or property owner. The term "defendant" refers to the party being sued, which, in eviction cases, is the tenant.
+
+<b>The top plaintiffs in our analysis are primarily companies because many landlords operate as corporate entities, such as property management companies or real estate investment firms.</b> This is a common practice in the rental housing industry.
+
+To make the findings more accessible to a broader audience, advocates and policymakers could use alternative language that emphasizes the human impact of evictions.For example:
+
+Instead of <i>"plaintiff"</i>, use <i>"landlord"</i>, <i>"landlording companies"</i>, or <i>"property owner"</i>
+
+Instead of <i>""defendant"</i>, use <i>""home occupant"</i>, <i>"tenant/renter"</i> or <i>""person facing eviction"</i>
+
+Instead of focusing solely on the companies filing the majority of evictions, highlight the experiences of individual tenants and families affected by evictions
+
+Attorney fees in eviction cases are a significant issue because they can create substantial financial barriers for tenants seeking legal representation. When tenants are unable to afford attorneys, they are more likely to face eviction, even if they have valid legal defenses. This lack of access to legal counsel exacerbates housing instability and disproportionately impacts low-income communities and communities of color.
+
+By shedding light on the disparities in attorney fee awards and their impact on tenants, this analysis aims to inform policy discussions and advocate for more equitable housing practices. Addressing the issue of attorney fees in evictions is crucial for promoting housing stability, preventing homelessness, and fostering more just and inclusive communities.
+
+# Glossary
+<details>
+  <summary>Plaintiff</summary>
+  <p>
+  In legal terms, a plaintiff is the party who initiates a lawsuit in court. In the context of eviction cases, the plaintiff is typically the landlord or property owner who files the lawsuit against the tenant seeking to regain possession of the property. The plaintiff is the party bringing the eviction action and is represented by their attorney in court proceedings.
+  </p>
+</details>
+
+<details>
+  <summary>Defendant</summary>
+  <p>
+  The defendant is the party against whom a lawsuit is filed. In eviction cases, the tenant is the defendant, as they are being sued by the landlord or property owner seeking to evict them from the rental property. The defendant has the opportunity to defend themselves against the eviction action, often with the assistance of legal representation.
+  </p>
+</details>
+
+<details>
+  <summary>Attorney Fees</summary>
+  <p>
+  Attorney fees refer to the costs associated with hiring a lawyer to represent a party in a legal matter. In eviction cases, attorney fees may be incurred by both the landlord (plaintiff) and the tenant (defendant), depending on the outcome of the case. Landlords often have legal representation to assist them in filing eviction lawsuits and pursuing eviction proceedings against tenants. Tenants may also seek legal representation to defend themselves against eviction actions and protect their rights in court.
+  </p>
+</details>
+
+<details>
+  <summary>Principle Amount</summary>
+  <p>
+  The principle amount in eviction cases typically refers to the unpaid rent or other financial obligations owed by the tenant to the landlord. When a landlord files an eviction lawsuit, they may seek to recover unpaid rent, damages, or other expenses owed by the tenant. The principle amount represents the monetary claim made by the landlord against the tenant in the eviction case.
+  </p>
+</details>
+
+<details>
+  <summary>Jurisdiction</summary>
+  <p>
+  Jurisdiction refers to the authority of a court to hear and decide legal cases within a specific geographic area or over certain types of disputes. In eviction cases, the jurisdiction determines which court has the authority to adjudicate the dispute between the landlord (plaintiff) and the tenant (defendant). The rules and procedures governing eviction cases may vary depending on the jurisdiction in which the case is filed, including the types of eviction notices required, the timeline for eviction proceedings, and the rights and responsibilities of landlords and tenants.
+  </p>
+</details>
+
+
+```{r}
+knitr::include_graphics("~/Downloads/long-eviction-overiew-flow-chart.jpeg")
+
+# Define a custom palette matching the "Sunset" palette from rcartocolor
+my_palette <- c("#FFEDA0", "#FED976", "#FEB24C", "#FD8D3C", "#FC4E2A", "#E31A1C", "#BD0026")
+```
+
+
+# Introduction
+This analysis explores trends and disparities in attorney fee awards in Virginia eviction cases following the 2019 reforms. It investigates the following questions:
+
+How often are attorney fees awarded to tenants who prevail in eviction cases?
+What is the typical amount of tenant attorney fee awards?
+How do tenant attorney fee award patterns vary across different localities?
+Are fee awards higher in neighborhoods with larger shares of Black or Brown residents?
+
+The findings will shed light on whether the attorney fee reform is having its intended effect of expanding access to counsel in underserved communities that face the highest eviction rates. The results can inform policy discussions on additional reforms needed to reduce inequities in eviction outcomes.
+The analysis draws on a dataset of eviction case records from the Virginia court system in 2023. Statistical methods are used to compare attorney fee award rates and amounts for tenants across localities.
+
+```{r}
+library(tidyverse)
+library(sf) 
+library(tigris) 
+library(rcartocolor)
+library(scales)
+library(classInt)
+library(ggplot2)
+library(dplyr)
+library(leaflet)
+library(reactable)
+
+va2023 <- readRDS("~/Desktop/learningR/data/va2023_prepped.rds")
+```
+
+## Attorney Fee Analysis
+#### Attorney Fee Awards by Attorney Presence
+A bar chart illustrates average attorney fees based on attorney presence in eviction cases. This highlights the disparity in legal representation between landlords and tenants. 
+
+There is a significant disparity in legal representation between landlords and tenants. While most landlords have attorneys, very few tenants do, putting them at a disadvantage in eviction proceedings.
+
+```{r}
+va2023$attorney_fees <- as.numeric(va2023$attorney_fees)
+
+atty_fees <- va2023 %>%
+  group_by(def_atty_present) %>%
+  summarise(avg_fees = mean(attorney_fees, na.rm = TRUE))
+
+barplot(atty_fees$avg_fees, names.arg = atty_fees$def_atty_present,
+        xlab = "Attorney Presence", ylab = "Average Attorney Fees",
+        main = "Attorney Fees by Attorney Presence")
+```
+
+#### Average Attorney Fees by County
+Utilizing county-level data, a choropleth map visualizes average attorney fees across Virginia's counties. Darker shades indicate higher average fees, providing insights into geographic variations.
+
+Attorney fees in eviction cases vary widely across counties in Virginia, with some areas having much higher average fees than others. This geographic variation suggests that local factors, such as court practices and housing market conditions, may influence attorney fee awards. In this case, Montgomery County is a clear outlier.
+
+```{r}
+va_counties <- counties(state = "51", cb = TRUE, progress_bar = FALSE)
+eviction_county_fees <- va2023 %>%
+  group_by(fips) %>%
+  summarise(avg_fee = mean(attorney_fees, na.rm = TRUE)) %>%
+  mutate(fips = as.character(fips))  # Convert to character type
+
+va_counties_fees <- left_join(va_counties, eviction_county_fees, by = c("COUNTYFP" = "fips"))
+
+leaflet(va_counties_fees) %>%
+  addTiles() %>%
+  addPolygons(
+    fillColor = ~colorNumeric("YlOrRd", avg_fee, na.color = "transparent")(avg_fee),
+    fillOpacity = 0.7,
+    color = "white",
+    weight = 1,
+    highlightOptions = highlightOptions(
+      weight = 2,
+      color = "#666",
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    label = ~paste0(NAMELSAD, ": $", round(avg_fee, 2)),
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "15px",
+      direction = "auto"
+    )
+  ) %>%
+  addLegend(
+    pal = colorNumeric("YlOrRd", va_counties_fees$avg_fee, na.color = "transparent"),
+    values = va_counties_fees$avg_fee,
+    opacity = 0.7,
+    title = "Average Attorney Fees"
+  )
+```
+
+### Eviction Outcomes by Zipcode
+Analyzing eviction outcomes by zipcode, we uncover patterns of plaintiff vs. dismissed judgments. This heatmap offers insights into the distribution of eviction judgments across Virginia.
+
+```{r}
+va_zcta <- zctas(starts_with = c("22", "23", "24"), year = 2020, cb = TRUE, progress_bar = FALSE)
+
+eviction_zip <- va2023 %>%
+  group_by(defendant_zip) %>%
+  summarise(cases = n(),
+            avg_amount = mean(prin_amount, na.rm = TRUE),
+            avg_fee = mean(attorney_fees, na.rm = TRUE)) %>%
+  filter(!is.na(defendant_zip)) %>%
+  mutate(defendant_zip = as.character(defendant_zip))  # Convert to character type
+
+eviction_zip <- right_join(va_zcta, eviction_zip, by = c("ZCTA5CE20" = "defendant_zip"))
+
+ggplot(data = eviction_zip) +
+  geom_sf(aes(fill = avg_fee)) +
+  scale_fill_carto_c(palette = "Sunset", name = "Average\nAttorney Fees", na.value = "transparent") +
+  labs(title = "Average Attorney Fees by Zipcode") +
+  theme_void() +
+  theme(plot.title = element_text(size = 10),
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 8))
+```
+
+## Eviction Filings Over Time
+A time-series bar chart illustrates trends in eviction filings by year and quarter. Understanding temporal patterns aids in identifying evolving trends in Virginia's eviction landscape. This data shows that eviction trends were constant in 2023.
+```{r}
+va2023 %>%
+  group_by(filed_year, filed_quarter) %>%
+  summarise(evictions = n()) %>%
+  ggplot(aes(x = paste0(filed_year, "-Q", filed_quarter), y = evictions)) +
+  geom_bar(stat = "identity", fill = my_palette[4]) +  # Use color from defined palette
+  labs(title = "Eviction Filings by Year and Quarter",
+       x = "Year-Quarter", y = "Number of Evictions") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Top Plaintiffs in Eviction Cases
+Examining the top plaintiffs in eviction cases sheds light on key players driving eviction filings. This analysis identifies entities with significant impacts on eviction rates.
+
+The top plaintiffs in eviction cases are primarily corporate entities, such as property management companies and real estate investment firms. This finding highlights the power imbalance between large-scale landlords and individual tenants.
+```{r}
+top_plaintiffs <- va2023 %>%
+  count(plaintiff_name, sort = TRUE) %>%
+  head(10)
+
+ggplot(top_plaintiffs, aes(x = reorder(plaintiff_name, n), y = n)) +
+  geom_bar(stat = "identity", fill = my_palette[3]) +  # Use color from defined palette
+  coord_flip() +
+  labs(title = "Top 10 Plaintiffs by Number of Evictions",
+       x = "Plaintiff", y = "Number of Evictions") +
+  theme_minimal()
+```
+
+## Heatmap of Plaintiff vs Dismissed Judgments by Zipcode
+
+A heatmap visualizes the proportion of plaintiff vs. dismissed judgments by zipcode. This provides insight into the distribution of eviction outcomes across different areas.
+
+Eviction outcomes favor plaintiffs more often than defendants, even in cases where tenants have valid legal defenses. This underscores the importance of access to legal representation for tenants facing eviction.
+
+```{r}
+# Group by zipcode and judgment, and count evictions
+eviction_heat <- va2023 %>%
+  group_by(defendant_zip, judgment) %>%
+  summarise(evictions = n()) %>%
+  ungroup() %>%
+  spread(judgment, evictions, fill = 0) %>%
+  mutate(defendant_zip = as.character(defendant_zip))  # Convert to character type
+
+# Join eviction_heat to va_zcta
+eviction_heat <- right_join(va_zcta, eviction_heat,
+                            by = c("ZCTA5CE20" = "defendant_zip")) %>%
+  filter(!is.na(GEOID20))
+
+# Create the heatmap
+ggplot(data = eviction_heat) +
+  geom_sf(aes(fill = Plaintiff / (Plaintiff + `Case Dismissed`))) +
+  scale_fill_carto_c(palette = "Sunset", name = "Proportion of\nPlaintiff Judgments") +
+  labs(title = "Heatmap of Plaintiff vs Dismissed Judgments by Zipcode") +
+  theme_void() +
+  theme(plot.title = element_text(size = 10),
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 8))
+```
+
+# Eviction Outcomes by Top Plaintiffs
+Further exploring eviction outcomes by top plaintiffs provides insights into their success rates and legal strategies. Understanding plaintiff behavior is crucial for contextualizing eviction trends.
+```{r}
+va2023 %>%
+  filter(plaintiff_name %in% top_plaintiffs$plaintiff_name) %>%
+  group_by(plaintiff_name, judgment) %>%
+  summarise(evictions = n()) %>%
+  ggplot(aes(x = plaintiff_name, y = evictions, fill = judgment)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Eviction Outcomes by Top Plaintiffs",
+       x = "Plaintiff", y = "Number of Evictions", fill = "Judgment") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+As demonstrated, a majority of cases for the top plaintiff's end in either an eviction of the tenant or case dismissal.   
+
+### Number of Cases by Attorney Fees as Percent of Principle Amount
+Attorney fees as percent of principle amount looks at what percent of the principle amount tenants are assigned to pay for attorney fees. In over 9,000 cases the tenant is assigned attorney fees worth approximately 11% of the principle amount. For example, if the principle amount is worth $1,000, the tenant would have attorney fees of approximately $110.
+```{r}
+va2023 %>% 
+  filter(atty_fees > 0,  prin_amount > 0, 
+         attyfees_percent_principle < 100) %>% 
+  ggplot(aes(attyfees_percent_principle)) +
+  geom_histogram(binwidth = 5, fill = my_palette[1], color = my_palette[2]) +  # Use colors from defined palette
+  labs(title = "Number of Cases by Attorney Fees as Percent of Principle Amount",
+       x = "Percent", y = "Count") + 
+  theme_minimal()
+```
+
+## 20 Plaintiffs With the Highest Mean Principle Amount
+This histogram looks at the 20 tenants with the highest average principle amounts in cases that end in evictions. 
+```{r}
+plaintiff_with_fees <- va2023 %>% 
+  filter(judgment == "Plaintiff") %>% 
+  group_by(plaintiff_name) %>% 
+  summarize(cases = n(),
+            fees_present = sum(atty_fees_present == "Yes"),
+            per_atty_fees = fees_present/cases,
+            ## eviction_number = sum(judgment == "Plaintiff"),
+            ## eviction_percent = (eviction_number/cases), 
+            ## percent of cases ended in an eviction for a given plaintiff 
+            # mean and median principle amount
+            mean_principle = mean(prin_amount, na.rm = TRUE),
+            med_principle = median(prin_amount,  na.rm = TRUE),
+            # mean and median attorney fees
+            mean_fees = mean(atty_fees, na.rm = TRUE),
+            med_fees = median(atty_fees, na.rm = TRUE),
+            # mean and median atty fee rate
+            mean_fee_percent = mean(attyfees_percent_principle, na.rm = TRUE),
+            med_fee_percent = median(attyfees_percent_principle, na.rm = TRUE),
+            # number and percent of cases with plaintiff attorney
+            atty_present = sum(pla_atty_present == "Yes"),
+            per_atty_present = atty_present/cases,
+            ## county_name = county_name,
+            # all distinct jurisdictions in which plaintiff filed eviction
+            jurisdiction = paste(unique(county_name), collapse=';')) %>%
+  filter(per_atty_fees > 0)
+
+plaintiff_with_fees %>%  
+  slice_max(cases, n = 20) %>% # Keep the 20 plaintiffs with the highest number of cases
+  ggplot(aes(x = fct_reorder(plaintiff_name, mean_principle), y = mean_principle)) +
+  geom_col(fill = my_palette[1]) +  # Use color from defined palette
+  labs(title = "Plaintiffs With the Highest Mean Principle Amount",
+       x = "Plaintiff", y = "Mean Principle Amount") + 
+  theme_minimal() + 
+  coord_flip()
+```
+
+## 20 Plaintiffs With the Highest Average Principle Amount as Percent of Attorney Fees
+The bar graph looks at the average percent of the principle amount tenants are assigned to pay for attorney fees. For example, on average, tenants in SJW LLC cases are assigned  attorney fees approximately 45% of their principle amount.
+```{r}
+plaintiff_with_fees %>%  
+  slice_max(cases, n = 20) %>% # Keep the 20 plaintiffs with the highest number of cases
+  filter(mean_fee_percent < 100) %>%
+  ggplot(aes(x = fct_reorder(plaintiff_name, mean_fee_percent), y = mean_fee_percent)) +
+  geom_col(fill = my_palette[2]) +  # Use color from defined palette
+  ylim(0, 100) +
+  theme_minimal() +
+  labs(title = "Plaintiffs With the Highest Average Principle Amount as Percent of Attorney Fees",
+       x = "Plaintiff", y = "Mean Percent of Principle Amount") +
+  coord_flip()
+```
+
+## Percent of Eviction Cases That Assign Fees by Plaintiff
+The bar graphs looks at the number of cases that assign fees as percent of total cases for cases that end in evictions. For example, 100% of cases that end in evictions for SGVA LLC have attorney fees whereas only 50% of cases that end in evictions have attorney fees for Cloverleaf Associates LC.
+```{r}
+plaintiff_with_fees %>%
+  slice_max(cases, n = 20) %>%
+  ggplot(aes(x = fct_reorder(plaintiff_name, per_atty_fees), y = per_atty_fees)) +
+  geom_col(fill = my_palette[3]) +  # Use color from defined palette
+  labs(title = "Percent of cases that assign fees by plaintiff",
+      x = "Plaintiff", y = "Percent") +
+  theme_minimal() +
+  coord_flip()
+```
+
+# Work Hours Required to Pay Attorney Fees
+A choropleth map visualizes the number of work hours required at minimum wage to pay average attorney fees by county. This highlights the financial burden faced by tenants in accessing legal representation.
+
+The financial burden of attorney fees can be substantial for tenants, often requiring a significant number of work hours at minimum wage to pay off. This creates barriers to housing stability and disproportionately impacts low-income households.
+```{r}
+# Calculate average attorney fees by county
+eviction_county_fees <- va2023 %>%
+  group_by(fips) %>%
+  summarise(avg_fee = mean(attorney_fees, na.rm = TRUE)) %>%
+  mutate(fips = as.character(fips))  # Convert to character type
+
+# Join average fees with county data
+va_counties_fees <- left_join(va_counties, eviction_county_fees, by = c("COUNTYFP" = "fips"))
+
+# Virginia minimum wage (as of May 1, 2021)
+va_min_wage <- 11
+
+# Calculate the number of work hours required at minimum wage to pay off the average attorney fees
+va_counties_fees <- va_counties_fees %>%
+  mutate(hours_at_min_wage = avg_fee / va_min_wage)
+
+# Create the choropleth map
+ggplot(va_counties_fees) +
+  geom_sf(aes(fill = hours_at_min_wage)) +
+  scale_fill_carto_c(palette = "Sunset", name = "Work Hours at Min. Wage", na.value = "transparent") +
+  labs(title = "Work Hours Required to Pay Average Attorney Fees",
+       subtitle = paste0("Based on Virginia Minimum Wage of $", va_min_wage, " per hour")) +
+  theme_void()
+```
+
+# Summary and Conclusion
+This comprehensive analysis of Virginia's eviction landscape underscores the importance of legal representation in achieving equitable outcomes. While reforms aim to address disparities, challenges persist, particularly in underserved communities.These findings underscore the need for policy interventions and community-based solutions to address inequities in the eviction process. Potential strategies include:
+
+- Expanding access to legal aid and pro bono legal services for tenants facing eviction
+- Implementing rent relief programs and emergency housing assistance to prevent evictions
+- Strengthening tenant protections and enforcing fair housing laws
+- Promoting alternative dispute resolution methods, such as mediation, to reduce the need for formal eviction proceedings
+- Advocating for more balanced and reciprocal attorney fee provisions in rental agreements
+
+By understanding the patterns and disparities in attorney fee awards, policymakers, advocates, and community leaders can work together to create a more equitable and just housing system in Virginia.
+
+# More Information
+## About the Authors
+```{r, echo=FALSE, out.width = "50%"}
+knitr::include_graphics("~/Desktop/Boches.jpg")
+knitr::include_graphics("~/Desktop/McGinley.jpg")
+```
+<p><b>Sarah Boches</b> is a graduating MPP student at the University of Virginia's Frank Batten School. She is passionate about leveraging data to inform policy decisions and drive positive change.</p>
+
+<p><b>Sophie McGinley</b> is also a graduating MPP student at the University of Virginia's Frank Batten School.She has a strong interest in using data analytics to address social issues and promote equity. </p>
+
+<i>Sarah and Sophie completed this analysis as part of a class on public interest data ethics and analysis at the Frank Batten School. The project focuses on thinking about the equity implications of the data and visualizing it in an accessible way to provide new and different insights compared to existing analyses.</i>
+
+## About the Data
+The dataset used in this analysis consists of all eviction cases filed in the Virginia General District Courts in 2023. The data was obtained from the Legal Services Corporation's Civil Court Data Initiative, which scrapes records from the Online Case Information System.
+The dataset includes the following key variables:
+
+District court where the case is filed
+Zipcode of the plaintiff (landlord) and defendant (tenant)
+Legal representation status of plaintiffs and defendants
+Judgment of the case (plaintiff, defendant, dismissal, etc.)
+Principal amount sought
+Attorney fees
+
+For this analysis, only cases that ended in a judgment of eviction were considered relevant.
+
+## Limitations of the Data
+While the dataset provides valuable insights into eviction cases in Virginia, it is important to acknowledge its limitations:
+
+The data is limited to cases filed in the Virginia General District Courts and may not capture all eviction cases in the state.
+The dataset relies on the accuracy and completeness of the records scraped from the Online Case Information System. There may be missing or inconsistent data.
+The analysis focuses on cases that ended in a judgment of eviction, which may not represent the full spectrum of eviction cases.
+The dataset does not provide detailed information on the specific circumstances or reasons behind each eviction case.
+
+Despite these limitations, the analysis aims to shed light on important trends and patterns in attorney fees related to eviction cases in Virginia.
+
+## Future Directions
+This analysis serves as a starting point for understanding the landscape of attorney fees in eviction cases in Virginia. Future research could explore:
+
+Qualitative interviews with tenants, landlords, and legal representatives to gain a deeper understanding of the factors influencing attorney fee decisions.
+Investigating the impact of specific policy changes or legal reforms on attorney fee patterns.
+Examining the relationship between attorney fees and other socioeconomic factors, such as income levels or racial demographics, to identify potential disparities.
+Collaborating with community organizations and advocacy groups to translate the findings into actionable recommendations for policy and practice.
+
+By building upon this analysis and engaging with diverse stakeholders, we can work towards a more equitable and just housing system in Virginia.
+
+# Appendix
+## Table of High Evicting Landlords 
+This table can be used to toggle and look at landlords with the highest number of eviction cases, mean principle amounts, mean amount of fees and more.
+```{r}
+reactable(plaintiff_with_fees,
+          columns = list(
+            plaintiff_name = colDef(name = "Plaintiff"), # mpc added
+            cases = colDef(name = "Cases"),
+            fees_present = colDef(name = "Fees Present"),
+            per_atty_fees = colDef(name = "Percent of Cases with Fees Present"),
+            mean_principle = colDef(name = "Mean Principle Amount"),
+            med_principle = colDef(name = "Median Principle Amount"),
+            mean_fees = colDef(name = "Mean Amount of Fees"),
+            med_fees = colDef(name = "Median Amount of Fees"),
+            mean_fee_percent = colDef(name = "Mean percent of cases with plaintiff attorney"),
+            med_fee_percent = colDef(name = "Median percent of cases with plaintiff attorney"),
+            atty_present = colDef(name = "Attorney Present"),
+            per_atty_present = colDef(name = "Percent of Cases with Attorney Present"), # mpc changed per_atty_preesent to per_atty_present
+            #county_name = colDef(name = "County"), # mpc removed
+            jurisdiction = colDef(name = "Jusrisdiction")))
+```
