@@ -1,0 +1,873 @@
+---
+title: "Landlord Watch: Holding Landlords Accountable"
+author: "Conrad Furlich, Gaby Vargas, Elizabeth Link"
+date: "May 6, 2024"
+output:
+  html_document:
+      toc: true
+      toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+```
+
+```{r libraries, include=FALSE}
+library(tidyverse)
+library(ggthemes)
+library(tigris)
+library(tidycensus)
+library(sf) 
+library(leaflet)
+library(ggplot2)
+library(rcartocolor)
+library(plotly)
+library(RColorBrewer)
+library(reactable)
+library(reactablefmtr)
+library(plotly)
+```
+
+
+```{r read in data}
+rva <- readRDS("../data/rva_eviction_prepped.RDS")
+```
+
+
+```{r data cleaning, include=FALSE}
+rva <- rva %>% 
+  mutate(filed_year_factor = factor(filed_year, levels = c("2018",
+                                                           "2019",
+                                                           "2020",
+                                                           "2021",
+                                                           "2022",
+                                                           "2023")))
+rva <- rva %>% 
+  mutate(filed_year_quarter = paste(filed_year, filed_quarter, sep = "-"))
+
+
+
+# look for attorney fees around to 25% of costs being sought
+rva <- rva %>% 
+  mutate(attyfees_bypercent = case_when(
+    attyfees_percent_principle > 20 & attyfees_percent_principle < 30 ~ "About 25% of Principal",
+    attyfees_percent_principle >= 30 ~ "Over 25% of Principal",
+    attyfees_percent_principle > 0 & attyfees_percent_principle <= 20 ~ "Under 25% of Principal",
+    TRUE ~ "None"),
+    attyfees_bypercent = factor(attyfees_bypercent, levels = c("Over 25% of Principal",
+                                                               "About 25% of Principal",
+                                                               "Under 25% of Principal",
+                                                               "None")))
+# Creating top plaintiffs datasets
+plaintiff_counts_by_year <- rva %>% 
+  group_by(filed_year_factor) %>% 
+  count(plaintiff_name)
+
+frequent_plaintiffs <- plaintiff_counts_by_year %>% 
+  filter(n >=50)
+
+top_ten_plaintiffs <- rva %>% 
+  count(plaintiff_name) %>% 
+  filter(n > 1560)
+
+top_ten_colors <- c("#E31A1C", "skyblue2", "#FB9A99", "#FDBF6F", "khaki2",
+                    "orchid1", "blue1", "darkturquoise", "green1", "brown")
+
+top_ten_evictors <- c("ADEN PARK RICHMOND ASSOCIATES LP", 
+                      "CHVA LLC",
+                      "CLHV LLC",
+                      "KRS HOLDINGS INC",
+                      "RFI SEVEN GABLES LLC",
+                      "RICHMOND RHA",
+                      "SGVA LLC",
+                      "SOUTHWOOD APTS LLC",
+                      "SQUIRE HILL RICHMOND ASSOCIATES LC",
+                      "ZACHARIAS BROTHERS REALTY")
+
+top_ten_plaintiffs_colors <- data.frame(plaintiff_name = top_ten_evictors,
+                                        color = top_ten_colors)
+
+top_ten_plaintiffs <- left_join(top_ten_plaintiffs, top_ten_plaintiffs_colors, by = "plaintiff_name")
+
+top_plaintiffs_by_year <- rva %>% 
+  group_by(filed_year_factor) %>% 
+  count(plaintiff_name) %>% 
+  filter(n > 90)
+
+top_ten_plaintiffs_2018 <- top_plaintiffs_by_year %>% 
+  filter(filed_year_factor == "2018", n>350)
+
+top_ten_plaintiffs_2019 <- top_plaintiffs_by_year %>% 
+  filter(filed_year_factor == "2019", n>348)
+
+top_ten_plaintiffs_2020 <- top_plaintiffs_by_year %>% 
+  filter(filed_year_factor == "2020", n>169)
+
+top_ten_plaintiffs_2021 <- top_plaintiffs_by_year %>% 
+  filter(filed_year_factor == "2021", n>90)
+
+top_ten_plaintiffs_2022 <- top_plaintiffs_by_year %>% 
+  filter(filed_year_factor == "2022", n>330)
+
+top_ten_plaintiffs_2023 <- top_plaintiffs_by_year %>% 
+  filter(filed_year_factor == "2023", n>380)
+
+top_ten_plaintiffs_by_year <- bind_rows(top_ten_plaintiffs_2018,
+                                        top_ten_plaintiffs_2019,
+                                        top_ten_plaintiffs_2020,
+                                        top_ten_plaintiffs_2021,
+                                        top_ten_plaintiffs_2022,
+                                        top_ten_plaintiffs_2023)
+
+top_ten_plaintiffs_by_year %>% 
+  group_by(plaintiff_name) 
+
+colors <- c(
+  "dodgerblue2", "#E31A1C", "green4", "#6A3D9A", "#FF7F00", 
+  "black", "gold1", "skyblue2", "#FB9A99", "palegreen2",
+  "#CAB2D6", "#FDBF6F", "gray70", "khaki2","maroon", 
+  "orchid1", "deeppink1", "blue1", "steelblue4", "darkturquoise", 
+  "green1", "darkorange4", "yellow4", "brown")
+
+top_plaintiffs <- c("3501 MEADOWDALE BOULEVARD LLC",
+                    "ADEN PARK RICHMOND ASSOCIATES LP",
+                    "AP 11 NORTH LLC",
+                    "AP ADEN PARK LLC",
+                    "ASHTON SQ APTS LP",
+                    "AWE BROOKSIDE OWNER LLC",
+                    "BREMNER WOODS LC",
+                    "CHVA LLC",
+                    "CLHV LLC",
+                    "DOMINION ASSOCIATES LC",
+                    "GATES HUDSON AND ASSOCIATES INC",
+                    "KRS HOLDINGS INC",
+                    "LTVA LLC",
+                    "RFI SEVEN GABLES LLC",
+                    "RG VILLAGE AT THE ARBORS OWNER LLC",
+                    "RICHMOND RHA",
+                    "ROLLINGWOOD RICHMOND ASSOCIATES LP",
+                    "SGVA LLC",
+                    "SJW LLC",
+                    "SOUTHWOOD APTS LLC",
+                    "SQUIRE HILL RICHMOND ASSOCIATES LC",
+                    "THWC LLC",
+                    "UNITED PROPERTY ASSOCIATES INC",
+                    "ZACHARIAS BROTHERS REALTY")
+
+plaintiff_colors <- data.frame(
+  plaintiff_name = top_plaintiffs,
+  color = colors
+)
+
+top_plaintiffs_colors <- left_join(top_ten_plaintiffs_by_year, plaintiff_colors, by = "plaintiff_name")
+```
+
+
+## Introduction
+Fifteen companies were responsible for nearly 50 percent of evictions in Richmond in 2022. These large companies may be more likely to evict tenants because they have automated the process. With some of these landlords, as soon as a payment becomes past due, an automated process to file an eviction begins, even if rental relief is coming (Cordes 2022).
+
+These evictions followed the end of the COVID-19 Eviction Moratorium, which prevented landlords from taking any action to evict a tenant if they did not pay rent. The CDC issued this policy to slow the spread of COVID-19. It prevented landlords from filing an eviction lawsuit, issuing eviction notices, asking courts for a “writ of eviction,” and pressuring tenants to vacate if they had not paid their rent. The Eviction Moratorium did not prevent landlords from filing evictions for other reasons besides rent payment and did not forgive unpaid rent (“CDC EVICTION MORATORIUM” n.d.).
+
+Landlords may evict tenants if they miss a payment or violate their leasing agreement. Evictions for these reasons are called “no-fault” evictions. Landlords may also evict tenants for breaking the law, damaging property, or “causing a disturbance,” which is not always clearly defined (Desmond n.d.).
+
+Regardless of the judgment of an eviction case, eviction filings are public information. Landlords often use these public records to search for potential tenants before accepting their leasing application. Often, they will deny applicants if they are in this dataset (Cordes 2022; “Salt in the Wound: How Eviction Records and Back Rent Haunt Tenant Screening Reports and Credit Scores” 2020).
+
+Being evicted can also be expensive for tenants. A small but growing set of law firms are advising landlords to stipulate that leases contain a clause saying that 25 percent of the costs being sought is a reasonable attorney fee. These clauses mean that above the costs the landlords are already seeking in eviction court, the people they are evicting are being asked to pay an additional quarter of that amount in “attorney fees.”
+
+In this project, we center landlords who often evict tenants using the same data they use to discriminate against potential renters. First, we explore who the top 10 evictors in the Richmond region are. Then, we explore trends in evictions from 2018 to 2023. Lastly, we look at how eviction fees differ across the region. We encourage potential tenants in the Richmond area to use our work as a resource to understand where they are renting and who they are renting from.
+
+ 
+### About the Data
+The data used throughout this project comes from all eviction cases filed in Virginia General Courts from 2018 to 2023 in the greater Richmond region, which includes Richmond, Henrico, Chesterfield, Charles City, Goochland, Hanover, New Kent, and Powhatan. The data was originally collected by courts to maintain information on cases. The Legal Service’s Corporation’s Civil Court Data has scraped online court records to assemble the dataset. In the data, there is information on who the plaintiffs and defendants are, if they have legal representation, the principal amount sought, and attorney fees.
+
+ 
+### About the Authors
+We are Master of Public Policy students at the University of Virginia. Two of us are or have rented housing in Virginia.
+
+We are committed to using this data for co-liberation. We want to ensure that the resources we create can be used by tenants and prospective tenants as a consumer protection measure and hold landlords who use the courts as a debt collection agency accountable.
+
+ 
+ 
+## Landlord Watch
+Because landlords use publicly available data to discriminate against potential tenants, the following table and figures are designed to help consumers understand who the top evictors are. These numbers are for all counties included in the dataset.
+
+The length of each bar corresponds to the number of evictions the landlord made. Hovering your cursor over each bar shows an estimate of how many people experienced the eviction process. The top number is the estimate assuming individuals lived alone. The bottom number is the estimate assuming each eviction happened to a household where 2.33 people lived, which is the average household size in the Richmond region. Notably, these are estimates and may not capture the true number of how many people evictions affect.
+
+### Top Ten Evictors Overall 
+```{r landlordwatch}
+top_ten <- top_ten_plaintiffs %>% 
+  ggplot(aes(x = n, y = reorder(plaintiff_name, -n), fill = color,
+             text = paste0("Number of people who experienced eviction if people live alone: ", n, "<br>",
+                           "Number of people who experienced eviction if households are the average size: ", round(2.334065*n, 0)))) + 
+  geom_col() +
+  scale_fill_identity() +
+  labs(title = "Top Ten Evictors in the Richmond Area, 2018-2023",
+       x = "Number of Evictions",
+       y = "Evictor Name") +
+  theme_solarized() +
+  theme(legend.position = "none",
+        plot.title = element_text(face = "bold", hjust=0, size=12),
+        axis.text=element_text(size=6))
+
+ggplotly(top_ten, tooltip = c("text"))
+```
+
+### Top Ten Evictors by Year {.tabset}
+#### 2018
+Of the top ten evictors in 2018, RFI Seven Gables LLC evicts the most frequently in 2018. They evicted over 2,300 households. The next most frequent evictor in 2018 was Richmond RHA; they evicted less than 2,000 households. All other top ten evictors evicted less than 1,300 households, with three evicting less than 500 households.
+
+```{r landlordwatch2018}
+## 2018
+top_ten_2018 <- top_plaintiffs_colors %>% 
+  filter(filed_year_factor == "2018") %>% 
+  ggplot(aes(x = n, y = reorder(plaintiff_name, -n), fill = color,
+             text = paste0("Number of people who experienced eviction if people live alone: ", n, "<br>",
+                           "Number of people who experienced eviction if households are the average size: ", round(2.334065*n, 0)))) +
+  geom_col() +
+  coord_cartesian(xlim = c(0, 2450)) +
+  scale_fill_identity() +
+  labs(title = "Top Ten Evictors in the Richmond Area, 2018",
+       x = "Number of Evictions",
+       y = "Evictor Name") +
+  theme_solarized() +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+        axis.text=element_text(size=6))
+
+ggplotly(top_ten_2018, tooltip = c("text"))
+```
+
+#### 2019
+Richmond RHA evicted 1,468 households in 2019, which was the most out of any evictor. The next most frequent evictor was RFI Seven Gables LLC, which evicted 1,107 households. They were closely followed by KRS Holdings Inc. and Zacharias Brothers Realty, who evicted 1,053 and 985 households respectively. All others evicted fewer than 600 households, with four evicting fewer than 400.
+
+```{r landlordwatch2019}
+## 2019
+top_ten_2019 <- top_plaintiffs_colors %>% 
+  filter(filed_year_factor == "2019") %>% 
+  ggplot(aes(x = n, y = reorder(plaintiff_name, -n), fill = color,
+             text = paste0("Number of people who experienced eviction if people live alone: ", n, "<br>",
+                           "Number of people who experienced eviction if households are the average size: ", round(2.334065*n, 0)))) +
+  geom_col() +
+  coord_cartesian(xlim = c(0, 2450)) +
+  scale_fill_identity() +
+  labs(title = "Top Ten Evictors in the Richmond Area, 2019",
+       x = "Number of Evictions",
+       y = "Evictor Name") +
+  theme_solarized() +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+        axis.text=element_text(size=6))
+
+ggplotly(top_ten_2019, tooltip = c("text"))
+```
+
+#### 2020
+*In 2020, the COVID-19 Eviction Moratorium was in place, so numbers are significantly lower than in previous years.*
+
+In 2020, KRS Holdings Inc. was the biggest evictor, evicting 540 households. No other landlord evicted more than 500 households. The next most frequent evictor was Zacharias Brothers Realty, which evicted 467 households. RFI Seven Gables LLC evicted 421 households, while Aden Park Richmond Associates evicted 365. The remaining evictors evicted fewer than 300 households.
+
+```{r landlordwatch2020}
+## 2020
+top_ten_2020 <- top_plaintiffs_colors %>% 
+  filter(filed_year_factor == "2020") %>% 
+  ggplot(aes(x = n, y = reorder(plaintiff_name, -n), fill = color,
+             text = paste0("Number of people who experienced eviction if people live alone: ", n, "<br>",
+                           "Number of people who experienced eviction if households are the average size: ", round(2.334065*n, 0)))) +
+  geom_col() +
+  coord_cartesian(xlim = c(0, 2450)) +
+  scale_fill_identity() +
+  labs(title = "Top Ten Evictors in the Richmond Area, 2020",
+       x = "Number of Evictions",
+       y = "Evictor Name") +
+  theme_solarized() +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+        axis.text=element_text(size=6))
+
+ggplotly(top_ten_2020, tooltip = c("text"))
+```
+
+#### 2021
+*In 2021, the COVID-19 Eviction Moratorium was in place, so numbers are significantly lower than in previous years.*
+
+In 2021, KRS Holdings Inc. remained the biggest evictor, evicting 699 households. RFI Seven Gables LLC evicted 510 households. No other landlord evicted more than 300 households. Richmond RHA and Zacharias Brothers Realty – both of whom had evicted a significant number of people – did not evict any households in 2021.
+
+```{r landlordwatch2021}
+## 2021
+top_ten_2021 <- top_plaintiffs_colors %>% 
+  filter(filed_year_factor == "2021") %>% 
+  ggplot(aes(x = n, y = reorder(plaintiff_name, -n), fill = color,
+             text = paste0("Number of people who experienced eviction if people live alone: ", n, "<br>",
+                           "Number of people who experienced eviction if households are the average size: ", round(2.334065*n, 0)))) +
+  geom_col() +
+  coord_cartesian(xlim = c(0, 2450)) +
+  scale_fill_identity() +
+  labs(title = "Top Ten Evictors in the Richmond Area, 2021",
+       x = "Number of Evictions",
+       y = "Evictor Name") +
+  theme_solarized() +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+        axis.text=element_text(size=6))
+
+ggplotly(top_ten_2021, tooltip = c("text"))
+```
+
+#### 2022
+KRS Holdings Inc. remained the biggest evictor in 2022, as well, evicting 990 households. CHVA LLC was the only other evictor to evict over 400 households. However, each of the remaining major evictors evicted between 300 and 400 households, which is an increase from years prior. The lowest of these top ten was Southwood Apartments, who evicted 339 households.
+
+```{r landlordwatch2022}
+## 2022
+top_ten_2022 <- top_plaintiffs_colors %>% 
+  filter(filed_year_factor == "2022") %>% 
+  ggplot(aes(x = n, y = reorder(plaintiff_name, -n), fill = color,
+             text = paste0("Number of people who experienced eviction if people live alone: ", n, "<br>",
+                           "Number of people who experienced eviction if households are the average size: ", round(2.334065*n, 0)))) +
+  geom_col() +
+  coord_cartesian(xlim = c(0, 2450)) +
+  scale_fill_identity() +
+  labs(title = "Top Ten Evictors in the Richmond Area, 2022",
+       x = "Number of Evictions",
+       y = "Evictor Name") +
+  theme_solarized() +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+        axis.text=element_text(size=6))
+
+ggplotly(top_ten_2022, tooltip = c("text"))
+```
+
+#### 2023
+KRS Holdings Inc. remained the biggest evictor in 2023, evicting 761 households. Southwood Apartments jumped from the tenth highest to the second highest evictor, evicting 627 households. Two out of the remaining eight landlords evicted over 500 households. Five out of the remaining six evicted over 400 households. This continues the trend of increased eviction rates as we move out of the COVID-19 moratorium.
+
+```{r landlordwatch2023}
+## 2023
+top_ten_2023 <- top_plaintiffs_colors %>% 
+  filter(filed_year_factor == "2023") %>% 
+  ggplot(aes(x = n, y = reorder(plaintiff_name, -n), fill = color,
+             text = paste0("Number of people who experienced eviction if people live alone: ", n, "<br>",
+                           "Number of people who experienced eviction if households are the average size: ", round(2.334065*n, 0)))) +
+  geom_col() +
+  coord_cartesian(xlim = c(0, 2450)) +
+  scale_fill_identity() +
+  labs(title = "Top Ten Evictors in the Richmond Area, 2023",
+       x = "Number of Evictions",
+       y = "Evictor Name") +
+  theme_solarized() +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+        axis.text=element_text(size=6))
+
+ggplotly(top_ten_2023, tooltip = c("text"))
+```
+
+### Landlord Watch Addendum
+This accompanying table helps to publish the data presented in the graphs above in a more intractable way. The user can search and sort by year, evictor, number of evictions, mean principal amount, how much a “reasonable attorney fee” of 25% would be, and the mean attorney fee.
+
+```{r addendum}
+evictions_table <- rva %>% 
+  filter(!is.na(plaintiff_name)) %>% 
+  group_by(filed_year, plaintiff_name) %>% 
+  summarize(evictions = n(),
+            mean_principal_amt = round(mean(prin_amount, na.rm = T), 2),
+            twentyfive_principal_amt = round(0.25*mean_principal_amt, 2),
+            mean_atty_fee = round(mean(atty_fees, na.rm = T), 2)) %>% 
+  filter(evictions > 100)
+
+reactable(evictions_table,
+          columns = list(
+            plaintiff_name = colDef(name = "Evictor"),
+            filed_year = colDef(name = "Year"),
+            evictions = colDef(name = "Number of Evictions",
+                               style = color_scales(evictions_table,
+                                                    colors = rcartocolor::carto_pal(n = 4, "Geyser"))),
+            mean_principal_amt = colDef(name = "Mean Principal Amount",
+                                        format = colFormat(prefix = "$", separators = TRUE)),
+            twentyfive_principal_amt = colDef(name = "Twenty-Five Percent of Principal Amount",
+                                              format = colFormat(prefix = "$", separators = TRUE)),
+            mean_atty_fee = colDef(name = "Mean Attorney Fee",
+                                   format = colFormat(prefix = "$", separators = TRUE),
+                                   style = color_scales(evictions_table,
+                                                        colors = rcartocolor::carto_pal(n = 4, "Geyser")))),
+          showSortable = TRUE, filterable = TRUE)
+```
+
+ 
+ 
+## Size and Scope of Attorney Fees
+As stated, we are investigating how people experience eviction across the Richmond region. One way to understand this is to look at how expensive attorney fees may be relative to the principal amount being sought. The following figures help us answer this question.
+
+ 
+### Distribution of Attorney Fees as a Percent of the Principle Amount
+The first figure presents the distribution of attorney fees as a percent of the principal amount. This graph can be interpreted by looking at the height of each bar. The height corresponds to the number of evictions that had attorney fees at that amount; the higher the bar for a given percent of the principal amount, the more eviction cases had attorney fees at that amount.
+
+```{r distribution}
+rva %>% 
+  filter(atty_fees > 0,  prin_amount > 0, 
+         attyfees_percent_principle < 100) %>% 
+  ggplot(aes(attyfees_percent_principle)) +
+  geom_histogram(binwidth = 1, fill = "#ff992d", color = "black") +
+  theme_solarized() +
+  labs(title = "Distribution of Attorney Fees as a Percent of the Principal Amount",
+       x = "Percent of Principal Amount",
+       y = "Count\n") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+```
+
+There are two large clusters of attorney fees as a percent of the principal amount. The first large cluster of observations is less than 25 percent. The second large cluster is just above 25 percent of the principal amount, but below 30 percent. 
+
+This indicates two things. First, some landlords are following the advice of lawyers and setting attorney fees to be around 25 percent of the principal amount. Second, some may be setting them a bit higher than 25 percent.
+
+ 
+### Attorney Fees vs Principle Amount {.tabset}
+These figures plot attorney fees against principal amounts. Each dot represents an eviction. The x-axis – how far the dot is horizontally – is based on the amount of the principal being sought. The y-axis – how high the dot is vertically – is based on the attorney fees in a case. The orange line represents attorney fees that are 25% of the principal amount being sought. Points to the left of this line mean that landlords are seeking attorney fees that are more than 25% of the principal amount. 
+
+As can be seen in the graphs, there are two separate clusters of dots. The first cluster of dots is along the horizontal axis. These dots represent cases with high principal amounts but low or no attorney fees. The second cluster of dots is along the orange line. These dots represent cases where the attorney fee is roughly 25 percent of the principal amount. Clicking through each year, it becomes evident that more eviction cases are near the orange line over time. These figures thus provide more evidence that landlords are often following the recommendations of lawyers to mandate attorney fees be equal to 25 percent of the principal amount being sought.
+
+#### 2018
+```{r attyfees2018}
+## 2018
+rva %>% 
+  filter(atty_fees > 0,  prin_amount > 0, 
+         atty_fees < 10000, prin_amount < 50000,
+         filed_year_factor == "2018") %>% 
+  ggplot(aes(x = prin_amount, y = atty_fees)) +
+  geom_point(shape = 1, alpha = 0.3) +
+  annotate("segment", y = 0, yend = 10000, x = 0, xend = 40000,
+               color = "#ff992d") +
+  theme_solarized() +
+  scale_y_continuous(labels = scales::dollar) +
+  scale_x_continuous(labels = scales::dollar) +
+  coord_cartesian(xlim = c(0, 50000), ylim = c(0, 10000)) +
+  labs(title = "Attorney Fees vs Principal Amount in 2018",
+       subtitle = "Orange Line = 25% of Principal Amount",
+       x = "\nPrinciple Amount (USD)\n",
+       y = "\nAttorney Fees (USD)\n") +
+  theme(plot.title = element_text(hjust = .5, face = "bold"),
+        plot.subtitle = element_text(hjust = .5))
+```
+
+#### 2019
+```{r attyfees2019}
+
+## 2019
+rva %>% 
+  filter(atty_fees > 0,  prin_amount > 0, 
+         atty_fees < 10000, prin_amount < 50000,
+         filed_year_factor == "2019") %>% 
+  ggplot(aes(x = prin_amount, y = atty_fees)) +
+  geom_point(shape = 1, alpha = 0.3) +
+  annotate("segment", y = 0, yend = 10000, x = 0, xend = 40000,
+           color = "#ff992d") +
+  theme_solarized() +
+  scale_y_continuous(labels = scales::dollar) +
+  scale_x_continuous(labels = scales::dollar) +
+  coord_cartesian(xlim = c(0, 50000), ylim = c(0, 10000)) +
+  labs(title = "Attorney Fees vs Principal Amount in 2019",
+       subtitle = "Orange Line = 25% of Principal Amount",
+       x = "\nPrinciple Amount (USD)\n",
+       y = "\nAttorney Fees (USD)\n") +
+  theme(plot.title = element_text(hjust = .5, face = "bold"),
+        plot.subtitle = element_text(hjust = .5))
+```
+
+#### 2020
+```{r attyfees2020}
+
+## 2020
+rva %>% 
+  filter(atty_fees > 0,  prin_amount > 0, 
+         atty_fees < 10000, prin_amount < 50000,
+         filed_year_factor == "2020") %>% 
+  ggplot(aes(x = prin_amount, y = atty_fees)) +
+  geom_point(shape = 1, alpha = 0.3) +
+  annotate("segment", y = 0, yend = 10000, x = 0, xend = 40000,
+           color = "#ff992d") +
+  theme_solarized() +
+  scale_y_continuous(labels = scales::dollar) +
+  scale_x_continuous(labels = scales::dollar) +
+  coord_cartesian(xlim = c(0, 50000), ylim = c(0, 10000)) +
+  labs(title = "Attorney Fees vs Principal Amount in 2020",
+       subtitle = "Orange Line = 25% of Principal Amount",
+       x = "\nPrinciple Amount (USD)\n",
+       y = "\nAttorney Fees (USD)\n") +
+  theme(plot.title = element_text(hjust = .5, face = "bold"),
+        plot.subtitle = element_text(hjust = .5))
+```
+
+#### 2021
+```{r attyfees2021}
+
+## 2021
+rva %>% 
+  filter(atty_fees > 0,  prin_amount > 0, 
+         atty_fees < 10000, prin_amount < 50000,
+         filed_year_factor == "2021") %>% 
+  ggplot(aes(x = prin_amount, y = atty_fees)) +
+  geom_point(shape = 1, alpha = 0.3) +
+  annotate("segment", y = 0, yend = 10000, x = 0, xend = 40000,
+           color = "#ff992d") +
+  theme_solarized() +
+  scale_y_continuous(labels = scales::dollar) +
+  scale_x_continuous(labels = scales::dollar) +
+  coord_cartesian(xlim = c(0, 50000), ylim = c(0, 10000)) +
+  labs(title = "Attorney Fees vs Principal Amount in 2021",
+       subtitle = "Orange Line = 25% of Principal Amount",
+       x = "\nPrinciple Amount (USD)\n",
+       y = "\nAttorney Fees (USD)\n") +
+  theme(plot.title = element_text(hjust = .5, face = "bold"),
+        plot.subtitle = element_text(hjust = .5))
+```
+
+#### 2022
+```{r attyfees2022}
+
+## 2022
+rva %>% 
+  filter(atty_fees > 0,  prin_amount > 0, 
+         atty_fees < 10000, prin_amount < 50000,
+         filed_year_factor == "2022") %>% 
+  ggplot(aes(x = prin_amount, y = atty_fees)) +
+  geom_point(shape = 1, alpha = 0.3) +
+  annotate("segment", y = 0, yend = 10000, x = 0, xend = 40000,
+           color = "#ff992d") +
+  theme_solarized() +
+  scale_y_continuous(labels = scales::dollar) +
+  scale_x_continuous(labels = scales::dollar) +
+  coord_cartesian(xlim = c(0, 50000), ylim = c(0, 10000)) +
+  labs(title = "Attorney Fees vs Principal Amount in 2022",
+       subtitle = "Orange Line = 25% of Principal Amount",
+       x = "\nPrinciple Amount (USD)\n",
+       y = "\nAttorney Fees (USD)\n") +
+  theme(plot.title = element_text(hjust = .5, face = "bold"),
+        plot.subtitle = element_text(hjust = .5))
+```
+
+#### 2023
+```{r attyfees2023}
+
+## 2023
+rva %>% 
+  filter(atty_fees > 0,  prin_amount > 0, 
+         atty_fees < 10000, prin_amount < 50000,
+         filed_year_factor == "2023") %>% 
+  ggplot(aes(x = prin_amount, y = atty_fees)) +
+  geom_point(shape = 1, alpha = 0.3) +
+  annotate("segment", y = 0, yend = 10000, x = 0, xend = 40000,
+           color = "#ff992d") +
+  theme_solarized() +
+  scale_y_continuous(labels = scales::dollar) +
+  scale_x_continuous(labels = scales::dollar) +
+  coord_cartesian(xlim = c(0, 50000), ylim = c(0, 10000)) +
+  labs(title = "Attorney Fees vs Principal Amount in 2023",
+       subtitle = "Orange Line = 25% of Principal Amount",
+       x = "\nPrinciple Amount (USD)\n",
+       y = "\nAttorney Fees (USD)\n") +
+  theme(plot.title = element_text(hjust = .5, face = "bold"),
+        plot.subtitle = element_text(hjust = .5))
+```
+
+ 
+### Different Categories of Attorney Fees over Time {.tabset}
+These figures look at eviction cases over time from 2018 to 2023. To do this, eviction cases were sorted into four categories. The first category was cases where the attorney fee was equal to 0. The second category was cases where attorney fees were greater than 0 but less than 25 percent of the principal amount being sought. The third category was cases where the attorney fee was about 25 percent of the principal amount being sought. The last category is composed of cases where the attorney fee was over 25 percent.
+
+Most cases had no attorney fees, and few cases had attorney fees greater than 25 percent of the principal amount. Additionally, more cases that had attorney fees were under 25 percent of the principal amount. While it’s difficult to pinpoint general trends, we do see an increasing trend in cases in the over 25 percent category. This is consistent with what was shown in the previous graphs, in which landlords may be following the recommendations of lawyers to mandate attorney fees be equal to 25 percent of the principal amount being sought, if not charging slightly more.
+
+
+#### Percent of Cases
+This figure shows the share of total evictions that fell into each category from 2018-2023.
+```{r overtime_percent}
+attyfeesbyyear <- rva %>% 
+  group_by(filed_year_quarter) %>% 
+  count(attyfees_bypercent)
+
+total_evictions <- rva %>% 
+  group_by(filed_year_quarter) %>% 
+  summarize(total = n())
+
+attyfees_overtime <- left_join(attyfeesbyyear, total_evictions)
+
+## Percent
+plot3 <- attyfees_overtime %>% 
+  group_by(attyfees_bypercent) %>% 
+  ggplot(aes(x = filed_year_quarter, y = n/total, 
+             group = attyfees_bypercent, color = attyfees_bypercent,
+             text = paste0("Filed Year & Quarter: ", filed_year_quarter, "<br>", 
+                           "Percent of Cases: ", round(n/total, 2)*100, "%", "<br>", 
+                           "Attorney Fees as % of Principal: ", attyfees_bypercent))) +
+  geom_rect(aes(xmin = 10, xmax = 18, ymin = 0, ymax = 1),
+                alpha = 0.01, color = "grey87", fill = "grey") +
+  geom_point() + 
+  geom_line() +
+  geom_text(aes(14, .5, label = "Eviction Moratorium\n Period"),
+            color = "grey40") + 
+  labs(title = "Percent of Cases with Different Attorney Fees over Time",
+       x = "Year",
+       y = "Percent of Cases",
+       color = NULL) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(breaks = c("2018-Q1", 
+                              "2019-Q1",
+                              "2020-Q1", 
+                              "2021-Q1", 
+                              "2022-Q1", 
+                              "2023-Q1"),
+                   labels = c("2018",
+                              "2019",
+                              "2020",
+                              "2021",
+                              "2022",
+                              "2023")) +
+  theme_solarized() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 12)) 
+
+ggplotly(plot3, tooltip = c("text"))
+```
+
+#### Total Cases
+This figure shows the number of evictions that fell into each category from 2018-2023.
+```{r overtime_total}
+## Total Count
+plot4 <- attyfees_overtime %>% 
+  group_by(attyfees_bypercent) %>% 
+  ggplot(aes(x = filed_year_quarter, y = n, 
+             group = attyfees_bypercent, color = attyfees_bypercent,
+             text = paste0("Filed Year & Quarter: ", filed_year_quarter, "<br>", 
+                           "Number of Cases: ", n, "<br>", 
+                           "Attorney Fees as % of Principal: ", attyfees_bypercent))) +
+  geom_rect(aes(xmin = 10, xmax = 18, ymin = 0, ymax = 7000),
+            alpha = 0.01, color = "grey87", fill = "grey") +
+  geom_point() + 
+  geom_line() +
+  geom_text(aes(14, 4000, label = "Eviction Moratorium\n Period"),
+            color = "grey40") + 
+  labs(title = "Total Cases with Different Attorney Fees over Time",
+       x = "Year",
+       y = "Number of Cases",
+       color = NULL) +
+  scale_x_discrete(breaks = c("2018-Q1", 
+                              "2019-Q1",
+                              "2020-Q1", 
+                              "2021-Q1", 
+                              "2022-Q1", 
+                              "2023-Q1"),
+                   labels = c("2018",
+                              "2019",
+                              "2020",
+                              "2021",
+                              "2022",
+                              "2023")) +
+  theme_solarized() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 12)) 
+
+ggplotly(plot4, tooltip = c("text"))
+```
+ 
+ 
+
+## Evictions Across the Richmond Area
+We also investigated how the cost of eviction varies across the Richmond region. In other words, we sought to answer "Where do attorney fees make up the largest percentage of the principal amount?" The following maps and table help us answer this question.
+
+### By County
+We first looked at attorney fees by county. This makes it easier to conceptualize the data presented, as counties offer more familiar geographic boundaries than zip codes do. Additionally, county residency often also has larger implications for residents than zip codes do. For example, residents of one county may have access to programs and resources that residents of another county do not. 
+
+This showed that Goochland has the highest average of attorney fees as a percentage of the principal amount. The mean percentage in Goochland is 23.1 percent. This may be because the zip code with the highest average percent is split between Hanover and Goochland, which can be seen in the next map.
+
+New Kent County follows Goochland, with an average percent of 21.5 percent. Next is Hanover County, which has a mean percent of 18.4, and Powhatan County, which has a mean percent of 17.1 percent. Chesterfield County and Richmond City have similar percentages, with 16.9 percent and 16.7 percent respectively. Henrico County has the second lowest, with 13.6 percent. Charles City County has the lowest average of attorney fees as a percentage of the principal amount in the Richmond region, with an average of 10 percent. 
+
+```{r mapsetup, include=FALSE}
+# Get the basic map
+va_counties <- counties(state = "51", cb = TRUE)
+
+rvareg_county <- va_counties %>% 
+  filter(COUNTYFP %in% c("760", "763", "087", "041", "036", "075", "085", "127", "145"))
+
+ggplot(data = rvareg_county) +
+  geom_sf()
+
+# Get the zip codes
+va_zcta <- zctas(starts_with = c("22", "23", "24"), year = 2020, cb = TRUE)
+
+# Create zip code variables
+rvaeviction_zip <- rva %>% 
+  mutate(fee_percent = (atty_fees/prin_amount)*100) %>% 
+  group_by(defendant_zip) %>% 
+  summarize(cases = n(),
+            avg_amount = mean(prin_amount, na.rm = TRUE),
+            avg_fee = mean(atty_fees, na.rm = TRUE),
+            avg_fee_per = mean(fee_percent, na.rm = TRUE)) %>% 
+  mutate(avg_amount = ifelse(is.nan(avg_amount), 0, avg_amount),
+         avg_fee = ifelse(is.nan(avg_fee), 0, avg_fee),
+         avg_fee_per = ifelse(is.nan(avg_fee_per), 0, avg_fee_per),
+         avg_fee_per = ifelse(is.infinite(avg_fee_per),
+                              (avg_fee/avg_amount)*100, avg_fee_per),
+         defendant_zip = as.character(defendant_zip))
+
+rvaeviction_zip %>% select(cases:avg_fee_per) %>% summary()
+
+# Create County Variables
+
+rvaeviction_county <- rva %>% 
+  mutate(fee_percent = (atty_fees/prin_amount)*100) %>% 
+  group_by(county) %>% 
+  summarize(cases = n(),
+            avg_amount = mean(prin_amount, na.rm = TRUE),
+            avg_fee = mean(atty_fees, na.rm = TRUE),
+            avg_fee_per = mean(fee_percent, na.rm = TRUE)) %>% 
+  mutate(avg_amount = ifelse(is.nan(avg_amount), 0, avg_amount),
+         avg_fee = ifelse(is.nan(avg_fee), 0, avg_fee),
+         avg_fee_per = ifelse(is.nan(avg_fee_per), 0, avg_fee_per),
+         avg_fee_per = ifelse(is.infinite(avg_fee_per),
+                              (avg_fee/avg_amount)*100, avg_fee_per))
+# Zip code data by landlord
+
+evictor_zip <- rva %>% 
+  mutate(fee_percent = (atty_fees/prin_amount)*100) %>% 
+  group_by(defendant_zip, plaintiff_name) %>% 
+  summarize(cases = n(),
+            avg_amount = mean(prin_amount, na.rm = TRUE),
+            avg_fee = mean(atty_fees, na.rm = TRUE),
+            avg_fee_per = mean(fee_percent, na.rm = TRUE)) %>% 
+  mutate(avg_amount = ifelse(is.nan(avg_amount), 0, avg_amount),
+         avg_fee = ifelse(is.nan(avg_fee), 0, avg_fee),
+         avg_fee_per = ifelse(is.nan(avg_fee_per), 0, avg_fee_per),
+         avg_fee_per = ifelse(is.infinite(avg_fee_per),
+                              (avg_fee/avg_amount)*100, avg_fee_per))
+
+
+# Join geographic and eviction data for zip codes
+rvaeviction_zip <- right_join(va_zcta, rvaeviction_zip,
+                              by = c("ZCTA5CE20" = "defendant_zip")) %>% 
+  filter(!is.na(GEOID20))
+
+rvaeviction_zip_reduced <- rvaeviction_zip  %>% 
+  st_filter(y = rvareg_county, .predicate = st_intersects)
+
+# Join geographic and eviction data for counties
+
+county_names <- c("Charles City County", "Chesterfield County", "Goochland County", "Hanover County", 
+               "Henrico County", "New Kent County", "Powhatan County", "Richmond city")
+
+rvaeviction_county <- rvaeviction_county %>%
+  mutate(county = factor(county, levels = unique(county), labels = county_names))
+
+
+rvareg_county <- right_join(rvaeviction_county, rvareg_county,
+                              by = c("county" = "NAMELSAD"))
+
+```
+
+```{r mapcounty}
+# Leaflet Map: Counties
+rvareg_county <- st_as_sf(rvareg_county)
+
+
+pal <- colorBin(carto_pal(5, "Sunset"), n = 5,
+                reverse = F,
+                domain = rvareg_county$avg_fee_per)
+
+leaflet() %>% 
+  addProviderTiles("CartoDB.Positron") %>% 
+  addPolygons(data = rvareg_county,
+              fillColor = ~pal(avg_fee_per),
+              fillOpacity = 0.8,
+              weight = 2, 
+            
+                opacity = 1,
+              color = "white",
+              highlight = highlightOptions(
+                weight = 2,
+                fillOpacity = 0.9,
+                bringToFront = T),
+              popup = paste0("County: ", rvareg_county$county, "<br>",
+                             "Mean Percent: ", round(rvareg_county$avg_fee_per, 1))) %>% 
+  addMapPane('countyBoundaries', zIndex = 410) %>%
+  addPolylines(data = rvareg_county, color = "white",
+               weight = 5,
+               group = 'countyBoundaries',
+               options = pathOptions(pane = 'countyBoundaries')) %>%
+  addLegend("bottomright", pal = pal, values = rvareg_county$avg_fee_per, 
+            title = "Mean Percent", opacity = 0.7)
+```
+ 
+### By Zipcode
+We next looked at attorney fees by zipcode, which is a smaller geography than counties, although zipcodes may cross county lines. 
+
+The zip code with the average highest mean percentage fee is located in both Hanover County and Goochland County, just Northwest of Henrico County and Richmond City. This zip code – 23146 – has a significantly higher mean percentage than the surrounding areas with a mean percentage of 76.6%. To contextualize this number, the next highest mean percent in Hanover County is 36.6%.
+
+The second highest percentage is in zip code 23838, which is located in Chesterfield County. This area has a mean percentage of 50.5%. The zip code with the next highest attorney fee percentage is located directly north. 23832 has a mean percentage of 19.8%, which is significantly lower.
+
+This begs the question of why these two specific zip codes are significantly higher than the areas around them. More generally speaking, Hanover County – the northernmost county presented here – appears to have more zip codes with higher mean percentages. This leads to questions of whether or not we see properties owned by more common evictors concentrated within these areas.
+
+```{r mapzipprep, include=FALSE}
+st_crs(rvaeviction_zip_reduced)
+rvaeviction_zip_reduced <- st_transform(rvaeviction_zip_reduced, 4326)
+
+rvareg_county <- st_transform(rvareg_county, 4326)
+
+pal <- colorBin(carto_pal(5, "Sunset"), n = 5,
+                reverse = F,
+                domain = rvaeviction_zip_reduced$avg_fee_per)
+```
+```{r mapzip}
+leaflet() %>% 
+  addProviderTiles("CartoDB.Positron") %>% 
+  addPolygons(data = rvaeviction_zip_reduced,
+              fillColor = ~pal(avg_fee_per),
+              fillOpacity = 0.8,
+              weight = 2, 
+              opacity = 1,
+              color = "white",
+              highlight = highlightOptions(
+                weight = 2,
+                fillOpacity = 0.9,
+                bringToFront = T),
+              popup = paste0("Zip Code: ", rvaeviction_zip_reduced$ZCTA5CE20, "<br>",
+                             "Mean Percent: ", round(rvaeviction_zip_reduced$avg_fee_per, 1))) %>% 
+  addMapPane('countyBoundaries', zIndex = 410) %>%
+  addPolylines(data = rvareg_county, color = "black",
+              weight = 5,
+              group = 'countyBoundaries',
+              options = pathOptions(pane = 'countyBoundaries')) %>%
+  addLegend("bottomright", pal = pal, values = rvaeviction_zip_reduced$avg_fee_per, 
+            title = "Mean Percent", opacity = 0.7)
+
+
+```
+
+To accompany these maps, we also constructed a table that shows the number of evictions, zipcode, average principal amount sought, average attorney fee, and the attorney fee as a share of the principal amount on average.
+
+It’s interesting to note that in zip codes with higher mean percentages, we don’t appear to commonly see the top ten evictors that we previously named. Instead, we see a repeated few names of evictors for those specific areas. 
+
+```{r tablezip}
+reactable(evictor_zip,
+          columns = list(
+            defendant_zip = colDef(name="Zip Code"),
+            plaintiff_name = colDef(name = "Evictor"),
+            cases = colDef(name = "Number of Evictions",
+                               style = color_scales(evictor_zip,
+                                                    colors = rcartocolor::carto_pal(n = 4, "Geyser"))),
+            avg_amount = colDef(name="Average Principal Amount",
+                  format =colFormat(prefix = "$", separators = TRUE)),
+            avg_fee = colDef(name="Average Attorney Fee",
+                  format =colFormat(prefix = "$", separators = TRUE)),
+            avg_fee_per = colDef(name = "Mean Attorney Fee Percent",
+                                   format = colFormat(separators = TRUE, digits=2),
+                                   style = color_scales(evictor_zip,
+                                                        colors = rcartocolor::carto_pal(n = 4, "Geyser")))),
+          showSortable = TRUE, filterable = TRUE)
+```
+
+
+## Conclusion
+Using data that has historically been used by landlords to discriminate against potential tenants, we aimed to create a resource that could help prospective tenants better understand where they are renting and who they are renting from. We also aimed to study trends in attorney fees, which can often be costly to people experiencing evictions, to better understand the financial cost of evictions. We implore people to use and improve upon our work in the future to create resources that continue to hold landlords accountable.
+
+## References
+“CDC EVICTION MORATORIUM.” n.d. DHCD. Accessed May 3, 2024. https://www.dhcd.virginia.gov/sites/default/files/Docx/other/cdc-eviction-moratorium.pdf.
+ 
+Cordes, Jakob. 2022. “Report: 15 companies are driving Richmond's eviction crisis.” WRIC, November 2, 2022. https://www.wric.com/news/virginia-news/report-15-companies-are-driving-richmonds-eviction-crisis/.
+ 
+Desmond, Matthew. n.d. “Why Eviction Matters | Eviction Lab.” The Eviction Lab. Accessed May 5, 2024. https://evictionlab.org/why-eviction-matters/#why-do-people-get-evicted.
+ 
+“Salt in the Wound: How Eviction Records and Back Rent Haunt Tenant Screening Reports and Credit Scores.” 2020. National Consumer Law Center. https://www.nclc.org/wp-content/uploads/2022/09/IB_Salt_in_the_Wound.pdf.
+

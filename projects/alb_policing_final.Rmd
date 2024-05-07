@@ -1,0 +1,460 @@
+---
+title: "Racialized Police Stops in Albemarle County"
+author: "Madison Cohen, Abby Cornwell, Eltina Sankoh"
+date: "May 6th, 2024"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Introduction to the Albemarle Policing Data 
+
+The following analysis is conducted with Albemarle County, Virginia policing data from 2021-2023, which was collected as a result of the Virginia Community Policing Act. The data provides **individual level information about all individuals stopped by law enforcement officers or State Police officers in the county.** This includes information on identities such as race, gender, age, and ethnicity, and also information on the initial reason for the stop, the location of the stop, and the outcomes of the stop. Law Enforcement Agencies collect and submit traffic stop data either monthly or quarterly to the Criminal Justice Information Services Division’s Data Analysis and Reporting Team. It is important to note that **the data are collected and reported by the officers themselves,** and the consequences of such will be discussed later on. **Additionally, the data does not include any information about the officer, which may hinder the analysis further.**
+```{r image, fig.align = 'center', out.width = "100%"}
+knitr::include_graphics("../images/virginia.policing.jpeg")
+```
+
+## Introduction to the Virginia Community Policing Act
+On July 1st, 2020, the Virginia Department of State Police began implementing the Virginia Community Policing Act. The Act requires the collection of specific data each time a law enforcement officer or State Police officer stops a “driver of a motor vehicle, stops and frisks a person based on reasonable suspicion, or temporarily details a person during any other investigatory stop” (Community Policing Data Act – Police and Public Safety, n.d.). The following information must be recorded according to the Act:
+
+*“(i). The race, ethnicity, age, gender of the person stopped, and whether the person stopped spoke English;*
+
+*(ii). The reason for the stop;*
+
+*(iii). The location of the stop;*
+
+*(iv). Whether a warning, written citation, or summons was issued or whether any person was arrested;*
+
+*(v). If a warning, written citation, or summons was issued or an arrest was made, the warning provided, violation charged, or crime charged;*
+
+*(vi). Whether the vehicle or any person was searched; and*
+
+*(vii). Whether the law-enforcement officer or State Police officer used physical force against any person and whether any person used physical force against any officer” (_Code of Virginia Code—Chapter 6.1._, n.d.).*  
+
+
+This law was passed in an effort to reduce “bias-based profiling” by law enforcement in Virginia (Virginia Community Policing Act Data | Albemarle County, VA, n.d.). **Bias-based profiling is defined as action taken by law enforcement officers based on perceived characteristics and identities such as race, ethnicity, and immigration status, rather than an individual’s behavior or information about suspected activity (Biased-Based Profiling - CCHR, n.d.).** Further, the law prohibits officers from engaging in bias-based profiling while conducting their official tasks. Each month’s data is collected and uploaded to the Community Policing Reporting Database, run by the Virginia State Police. According to the City of Albemarle, the data will be analyzed for the prevalence of biased-profiling (Virginia Community Policing Act Data | Albemarle County, VA, n.d.). 
+
+# Community Engagement & Feedback on Subject Matter
+
+## Community Experiences & Alignment With Data 
+
+**There are valid community concerns about speeding, which matches the fact that the majority of traffic stops in the data occurred due to speeding.** Albemarle County continues experiencing fatal accidents relating to speeding vehicles. This includes pedestrian Charles Gray’s unfortunate death on February 20, 2024, when he was struck and killed while trying to cross Route 29; he and his friend had noted the road to be notoriously difficult to cross due to a lack of indicators of pedestrians crossing (Glass, 2024a). While police have indicated working on installing a signalized traffic stop on Route 29 (i.e. having a countdown for crossing), community members have expressed concerns about measures for roads that cannot undergo these types of renovations (i.e. due to lacking a sidewalk and crosswalks) (Glass, 2024a). 
+
+In the Crozet area of Albemarle County, police have cited their and the community’s concerns with the general increase in traffic violations due to the area’s expansion and growing population as a reason to patrol more heavily in this area (Martin, 2023). Overall, community members within the county observe and express concerns about speeding.
+
+Even with evidence of speeding being a notable complaint in the county, that does not excuse disproportionately conducting racially discriminatory traffic stops. This message is more potent following CPD Chief Michael Kochis’ announcement on August 9, 2023, when he shared that the **2023 VA Policing Data revealed that 29% of Black drivers have been stopped by the city’s police, despite Black drivers only making up 18% of the city’s driving population (Stith, 2023).** Charlottesville's Black residents have shared experiences of racial discrimination, explaining a lack of trust in the police department, court system, nor city workers (Yager, 2016) at a 2016 community forum. Then 18-year-old Kimani shared this sentiment in a separate interview, explaining how he felt more misunderstood and unsupported by police, judges, and teachers in positions of power as a Black male spending much of his teenage years in the Blue Ridge Detention Center (Yager, 2016). Many other Black Charlottesville families notably refused to be interviewed out of fear of retaliatory actions at work and in the community. Community members have hosted various workshops and discussions that conclude that **while police may try to interact with community members more to address racial disparities, Black community members feel that more formal policies will better heal their distrust in the city's enforcement, judiciary, and administrative institutions (Yager, 2016).** Indeed, the VA Policing Act's establishment in 2020 appears to be a more formal policy to help the county work towards goal, complementing the community's lived experiences with traffic stop trends and the racial disparities in the data.
+
+- <span style="background-color:lightyellow">Speeding is a significant concern in Albemarle County, highlighted by data showing a majority of traffic stops are due to speeding and tragic incidents like Charles Gray's death on Route 29.</span>
+- <span style="background-color:lightyellow">Increased traffic violations in expanding areas like Crozet prompt heavier police patrolling, reflecting community concerns about speeding.</span>
+- <span style="background-color:lightyellow">Racial disparities in traffic stops persist, with Black drivers being disproportionately stopped, leading to a lack of trust in law enforcement and calls for formal policies to address systemic issues.</span>
+
+## Placing Responsibility on VDOT and Police for Safer Road Practices  
+
+Community feedback also places responsibility on the police and the local and state government bodies to take preventative measures against speeding, which could help decrease the number of traffic stops if there are infrastructural measures in place to lower the frequency of speeding and other traffic violations reported in our data. Brad Diggans from the St. George Avenue neighborhood in Crozet echoes this sentiment, having helped mobilize community members to urgently push for safer transportation signals in his neighborhood after his four-year-old son was hit by a vehicle speeding in the area (Martin, 2021). This indicates that **community members have initial ideas that could help temper the traffic stops – and, consequently, the disparities that result – through a more preventative manner that local or state Virginian government bodies can enforce.** Further research can be done into whether there have been efforts to promote these suggestions to the appropriate bodies of government, such as the Virginia Department of Transportation’s (VDOT) Culpeper District representatives, of which Albemarle County falls within (_Districts_, 2024; _Speed Limits_, 2024).
+
+## Police Response to Speeding Trends and Impact on Data Collection 
+
+Interestingly, ACPD seems to be taking actions that may intentionally increase the number of traffic stops in their efforts to combat traffic violations related to speeding and distracted driving, which they say are their two main causes of crashes. These actions are referred to as **traffic initiatives,** which appears to be a period a time when **patrol officers intentionally station themselves at locations with high rates of traffic violations, looking out for drivers engaging in speeding and distracted driving behaviors.** They did so at two popular locations in the data: the U.S. 250 Bypass by Fontaine Avenue, which ACPD has designated a high traffic zone; and the 2500 block of U.S. 29, which ACPD has found to have a high motorist crash rate (Hemphill, 2024).   
+
+* January 2024: 123 vehicles stopped, 131 tickets issued (_ACPD Releases Numbers_, 2024)
+* March 2024: 113 vehicles stopped, 119 tickets issued (_ACPD Releases Numbers_, 2024)
+
+They seem to view these efforts positively, hypothesizing that the traffic initiatives may have help reduce fatal crashes by 43.75% in 2023 (Allen, 2024). 
+
+**However, the VA Policing Act is meant to help consider the trade offs of this perceived success.** Maybe more vehicles are successfully stopped and fatal crashes have reduced, but exploring the data reveals that the stops are still disproportionately discriminatory against people of color, especially Black individuals.   
+
+It would be interesting to either track the dates of these initiatives between 2021 and 2023, and/or to do so with the upcoming 2024 Policing Act data to see if there is a noticeable rise in traffic stops (in general and due to speeding). This includes reviewing the VA Policing Data to see if violations related to distracted driving can be filtered out, as we have not spent as much time exploring those types of stop reasons.  
+
+## Avenues for Providing Feedback to Police 
+
+* **ACPD Citizens Advisory Committee (CAC)**
+
+The CAC reviews police policies, regulations, complaints, and actions every other month (_Citizens Advisory Committee | Albemarle County_). Their webpage includes an email where residents can send inquiries to the Chief of Police. However, it is unclear on the site if the questions go to the CAC who pass on inquiries on residents’ behalf, or if the questions go directly to the Chief. 
+
+* **CPD Guardian Scores Rating System (since March 1, 2024)**
+
+CPD has piloted this police rating system by allowing citizens who encounter police to rate their interactions by scanning an officer’s unique QR code and answering subsequent questions, such as whether the officer explained the reason for the stop, and if they remained courteous during the interaction (Glass, 2024b). Other than initial concerns about the program being an unfamiliar way to engage with the police force, we anticipate having a better idea of Guardian Scores’ efficacy as citizens become more aware of the feedback option. Admittedly, it is unclear what limitations and barriers may bar this program’s success, such as knowing if officers are consistently telling citizens about the program, and understanding if and how the officer’s demeanor could potentially dissuade citizens from scanning the QR code needed to rate that specific officer. 
+
+
+```{r libraries}
+## Load libraries ----
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(sf)
+library(waffle)
+library(ggsankey)
+library(scales)
+library(rcartocolor)
+library(ghibli)
+library(RColorBrewer)
+library(grDevices)
+```
+
+```{r data, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+
+## Load data ----
+beat_summaries_nosf <- read_csv("../data/beat_summaries_nosf.csv")
+  beat_summaries_nosf <- beat_summaries_nosf %>% select(-1)
+  beat_summaries_nosf <- clean_names(beat_summaries_nosf)
+  
+alb_pol_all <- read_csv("../data/alb_pol_all.csv")
+
+beat_stops_summaries <- readRDS("../data/beat_stops_summaries.RDS")
+
+beats <- st_read("../data/POLICE_RESPONSE_AREAS.shp")
+```
+# An Overview of Racialized Policing in Albemarle County
+## Actions Taken During a Traffic Stop
+The following image is a Sankey diagram that illustrates the actions taken during traffic stops by race. It shows the flow from the reason for the stop through whether a person was searched, if physical force was used, to the final outcome of the stop (such as warning, citation/summons, or arrest). Different colors represent different racial groups, with flows demonstrating the proportions and relationships between initial reasons for stops and their outcomes.
+```{r sankey, fig.align = 'center', out.width = "100%"}
+knitr::include_graphics("../images/sankey.png")
+```
+
+## Police Beats Map
+The following map shows the 21 Albemarle County Police beats. A police beat is a designated area patrolled by law enforcement officers. Officers are traditionally assigned to a specific beat and are responsible for patrolling that geographic region.
+```{r police_beats_map, echo=TRUE}
+## Map Showing the Police Beats ----
+
+# Make palette
+pal <- c(ggthemes::tableau_color_pal("Tableau 20")(20), "grey70")
+
+# Make plot
+ggplot(beats) +
+  geom_sf(aes(fill = Beat)) +
+  geom_sf(data = beats, color = "black",
+          alpha = 0, linewidth = 1) +
+  scale_fill_manual(values = pal) +
+  geom_sf_text(aes(label = Beat), size = 3, color = "black", 
+               check_overlap = TRUE) +
+  theme_void() +
+  theme(legend.position = "none") +
+  labs(title = "Albemarle Police Beats",
+       subtitle = "as of 2024",
+       caption = "Albemarle GIS Data")
+```
+
+## Demographics of the Residents of Police Beats
+The below waffle chart provides a breakdown of the demographic makeup of each of the police beats in Albemarle County. It is clear that the beats are primarily made up of White residents; however, some beats such as 4, 5, 6, and 7 are more diverse than some of the others, with a larger proportion of residents of color. 
+```{r beat_demographics_waffle}
+# Waffle Chart of Demographics of Residents of Police Beats ----
+
+## Pivot dataframe longer ----
+beat_summaries_nosf <- select(beat_summaries_nosf, -total)
+beat_sum_long <- beat_summaries_nosf %>% 
+    pivot_longer(
+      cols = -beat,  
+      names_to = "race",  
+      values_to = "count"
+    )
+
+## Make waffle chart ----
+beat_sum_long %>% 
+  drop_na(race, beat, count) %>% 
+  group_by(race, beat) %>% 
+  ggplot(aes(fill = race, values = count)) +
+  geom_waffle(n_rows = 10, color = "white",
+              make_proportional = TRUE,
+              flip = TRUE) +
+  facet_wrap(~beat, nrow = 3,
+             strip.position = "bottom") + 
+  labs(fill = "",
+       title = "Resident Demographics of Police Beats",
+       subtitle = "1 square = 10% of people") +
+  coord_equal() +
+  theme_void() +
+  theme(plot.caption = element_text(hjust = 0.5),
+        legend.position = "bottom") +
+  scale_fill_brewer(palette = "Dark2", labels = function(x) 
+    stringr::str_to_title(gsub("_", " ", x))) 
+```
+
+# Disparities in Who is Stopped by Police by Police Beat
+
+## Breakdown of White Residents and Stops
+White residents are less likely to be stopped, especially in areas with low White populations
+
+<div class = "row">
+<div class = "col-md-6">
+```{r, white_residents, echo = FALSE}
+## How many White residents in each beat compared to ----
+## proportion of White individuals stopped beat?
+
+### White Residents ----
+
+beat_stops_summaries %>%
+  group_by(geometry, beat) %>% 
+  summarize(prop_white = sum(white)/sum(total),
+            .groups = "drop",
+            geometry = st_union(geometry)) %>%
+  ggplot() +
+  geom_sf(aes(fill = prop_white)) +
+  scale_fill_distiller(palette = "YlOrBr", direction = 1, 
+                       name = "Proportion of Residents\nwho are White",
+                       labels = label_percent(scale = 100)) +
+  geom_sf_text(aes(label = beat), size = 3, color = "black", 
+               check_overlap = TRUE) +
+  theme_void() +
+  labs(title = "Proportion of Residents who are White",
+       subtitle = "by Police Beat",
+       caption = "Albemarle Community Policing Act Data")
+
+```
+</div>
+<div class = "col-md-6">
+```{r, white_stops}
+### Stops of White People ----
+
+beat_stops_summaries %>% 
+  group_by(geometry, beat) %>% 
+  summarize(prop_white = s_white/s_total,
+            .groups = "drop",
+            geometry = st_union(geometry)) %>%
+  ggplot() +
+  geom_sf(aes(fill = prop_white)) +
+  scale_fill_distiller(palette = "YlOrBr", direction = 1,
+                       name = "Proportion of Stops\nWhere Person\nStopped Is White",
+                       labels = label_percent(scale = 100)) +
+  geom_sf_text(aes(label = beat), size = 3, color = "black", 
+               check_overlap = TRUE) +
+  theme_void() +
+  labs(title = "Proportion of Stops Where White Person\nis Stopped by Police",
+       subtitle = "by Police Beat",
+       caption = "Albemarle Community Policing Act Data")
+```
+</div>
+</div> 
+
+
+## Breakdown of Black Residents and Stops
+Black individuals are more likley to be stopped,  especially in areas with low Black resident populations
+
+<div class = "row">
+<div class = "col-md-6">
+```{r black_residents, echo=FALSE}
+## How many black residents in each beat compared to ----
+## proportion of black individuals stopped beat?
+
+### Black Residents ----
+beat_stops_summaries %>%
+  group_by(geometry, beat) %>% 
+  summarize(prop_black = sum(black)/sum(total),
+            .groups = "drop",
+             geometry = st_union(geometry)) %>%
+  ggplot() +
+  geom_sf(aes(fill = prop_black)) +
+  scale_fill_distiller(palette = "Oranges", direction = 1, 
+                       name = "Proportion of Residents\nwho are Black",
+                       labels = label_percent(scale = 100)) +
+  geom_sf_text(aes(label = beat), size = 3, color = "black", 
+               check_overlap = TRUE) +
+  theme_void() +
+  labs(title = "Proportion of Residents who are Black",
+       subtitle = "by Police Beat",
+       caption = "Albemarle Community Policing Act Data")
+```
+</div>
+<div class = "col-md-6">
+```{r black_disparities_instops, echo=FALSE}
+beat_stops_summaries %>% 
+  group_by(geometry, beat) %>% 
+  summarize(prop_black = s_black/s_total,
+            .groups = "drop",
+            geometry = st_union(geometry)) %>%
+  ggplot() +
+  geom_sf(aes(fill = prop_black)) +
+  scale_fill_distiller(palette = "Oranges", direction = 1,
+                       name = "Proportion of Stops\nWhere Person\nStopped Is Black",
+                       labels = label_percent(scale = 100)) +
+  geom_sf_text(aes(label = beat), size = 3, color = "black", 
+               check_overlap = TRUE) +
+  theme_void() +
+  labs(title = "Proportion of Stops Where Black Person\nis Stopped by Police",
+       subtitle = "by Police Beat",
+       caption = "Albemarle Community Policing Act Data")
+```
+</div>
+</div> 
+## Breakdown of Hispanic Residents and Stops
+
+Hispanic individuals are more likely to be stopped, especially in areas with low Hispanic resident populations
+
+<div class = "row">
+<div class = "col-md-6">
+```{r hispanic_residents, echo = FALSE}
+### Hispanic Residents ----
+
+beat_stops_summaries %>%
+  group_by(geometry, beat) %>% 
+  summarize(prop_hispanic = sum(hispanic)/sum(total),
+            .groups = "drop",
+            geometry = st_union(geometry)) %>%
+  ggplot() +
+  geom_sf(aes(fill = prop_hispanic)) +
+  scale_fill_distiller(palette = "Purples", direction = 1, 
+                       name = "Proportion of Residents\nwho are Hispanic",
+                       labels = label_percent(scale = 100)) +
+  geom_sf_text(aes(label = beat), size = 3, color = "black", 
+               check_overlap = TRUE) +
+  theme_void() +
+  labs(title = "Proportion of Residents who are Hispanic" ,  
+       subtitle = "by Police Beat",
+       caption = "Albemarle Community Policing Act Data")
+```
+</div>
+<div class = "col-md-6">
+```{r hispanic_disparities_instops, echo = FALSE}
+beat_stops_summaries %>% 
+  group_by(geometry, beat) %>% 
+  summarize(prop_hispanic = s_hispanic/s_total,
+            .groups = "drop",
+            geometry = st_union(geometry)) %>%
+  ggplot() +
+  geom_sf(aes(fill = prop_hispanic)) +
+  scale_fill_distiller(palette = "Purples", direction = 1,
+                       name = "Proportion of Stops\nWhere Person\nStopped Is Hispanic",
+                       labels = label_percent(scale = 100)) +
+  geom_sf_text(aes(label = beat), size = 3, color = "black", 
+               check_overlap = TRUE) +
+  theme_void() +
+  labs(title = "Proportion of Stops Where Hispanic Person\nis Stopped by Police",
+       subtitle = "by Police Beat",
+       caption = "Albemarle Community Policing Act Data")
+```
+</div>
+</div> 
+# Disparities in People Searched
+Examining the number of people searched by race, Black individuals are more likely to be searched than any other race. It does not appear to be correlated to how many stops by Beat. There are more searches where there are less stops overall. 
+```{r disparities_searching}
+# ...............................................Maps
+
+## Where/Who are People Searched the Most? ----
+
+### Demographics of People who are Searched ----
+
+alb_pol_all %>%
+  group_by(race) %>%
+  summarise(
+    num_race = n(),
+    prop_searched = sum(person_searched == "Y") / num_race,
+    .groups = 'drop'
+  ) %>%
+  mutate(race = fct_reorder(race, prop_searched, .desc = FALSE)) %>%
+  ggplot(aes(x = race, y = prop_searched, color = race)) + 
+  geom_segment(aes(xend = race, yend = 0), size = 1.5) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c("White" = "#E6AB02", "Black" = "#D95F02", 
+                                "Asian/Native Hawaiian/Pacific Islander" = "#1B9E77", 
+                                "Unknown" = "#E7298A",
+                                "Native American/Alaska Native" = "#66A61E")) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  coord_flip() +
+  labs(x = "", y = "\nProportion Searched", 
+       title = "Proportion of People Stopped Who Were Searched\nby Race",
+       caption = "Source: Albemarle Community Policing Act Data") +
+  scale_y_continuous(labels = label_percent(scale = 100))
+```
+
+# Stops by Beat and Proportion of Searches
+It is clear that there are particular beats, specifically beats 18 and 19 that are more likely to search indivduals upon stop than others, even though they experience less stops than others. 
+<div class = "row">
+<div class = "col-md-6">
+
+```{r disparities_beats}
+beat_stops_summaries %>%
+  group_by(geometry, beat) %>%
+  ggplot() +
+  geom_sf(aes(fill = s_total)) +
+  scale_fill_distiller(palette = "Reds", direction = 1, 
+                       name = "Number of Stops") +
+  geom_sf_text(aes(label = beat), size = 3, color = "black", 
+               check_overlap = TRUE) +
+  theme_void() +
+  labs(title = "Number of Stops",
+       subtitle = "by Police Beat",
+       caption = "Albemarle Community Policing Act Data")
+```
+
+</div>
+<div class = "col-md-6">
+
+```{r disparities_beats_searching}
+beat_stops_summaries %>%
+  group_by(geometry, beat) %>%
+  summarize(prop_person_searched = s_person_searched/s_total) %>% 
+  ggplot() +
+  geom_sf(aes(fill = prop_person_searched)) +
+  scale_fill_distiller(palette = "Reds", direction = 1, 
+                       name = "Proportion of Stops Where\nPerson Was Searched",
+                       labels = label_percent(scale = 100)) +
+  geom_sf_text(aes(label = beat), size = 3, color = "black", 
+               check_overlap = TRUE) +
+  theme_void() +
+  labs(title = "Proportion of Stops Where Person Was Searched",
+       subtitle = "by Police Beat",
+       caption = "Albemarle Community Policing Act Data")
+```
+</div>
+</div> 
+
+## Limitations of the Data
+
+It is necessary to acknowledge the limitations of this data to increase transparency and ensure all readers understand their implications. First, this data is reported by the officers themselves. The Community Policing Act allows for the individual being interacted with to self-identify or the officer to make their own determination of identifying characteristics (Community Policing Act Data Collection: Instructions and Technical Specifications, 2023). **Particularly as this pertains to race, gender, and ethnicity, the allowance of officers to impose their perspectives onto someone else’s identity proves problematic. This form of data collection contributes to data that is, “positive and reductionist, and thus unable to represent systems of oppression such as sexuality, gender, and race with complexity and nuance” (Guyan, 2022).** According to the Virginia Community Policing Act, officers are allowed to group together ethnicities such as Spanish, Puerto Rican, and Mexican under the categorization of Hispanic/Latino, even if they do not personally identify as such (Community Policing Act Data Collection: Instructions and Technical Specifications, 2023). Additionally, officers are permitted to make assumptions about one’s gender based on observation. **The assumption of one’s identity by an officer fails to capture intersectional identities, as well as risks misidentifying individuals. Therefore, there is no guarantee that this data accurately captures the identities of the individuals represented.**
+
+In addition to the limited perspectives offered by officer-reported data, **there is no officer-level information included in these data.** Research on policing indicates that officers of color make far fewer stops and use less physical force than their white counterparts, particularly on Black individuals (Ba et. al., 2021). Understanding the demographics of the officers making these stops would help researchers better understand these dynamics and be able to more accurately analyze the data. While there is no police-level data, we do know that the Albemarle Police Department currently comprises 148 officers, of whom there are 135 white officers, 7 Black or African American officers, 6 Hispanic of Latino Officers. There are no officers who identify as Asian, Native Hawaiian/Pacific Islanders, American Indian or Alaska Native, or multiple races. There are 128 male officers and 20 female officers. Given the limitations of the data, it is not possible to draw any causal claims regarding police stops in the county.
+
+Another limitation is that **the VA Policing Act data is collected over a short amount of time (2024 will be the fourth year of data available).** We have been able to get a lot from it so far, but some changes in collection requirements have meant that we are missing up to a year’s worth of data for certain categories. This is understandable, as the reporting requirements were being re-evaluated and adjusted as needed and as early as possible. Yet, this is harder to overlook when we currently have so little years of data. This will likely be less of a limitation as more years of data are collected, and data collection is refined. For now, however, it is worth noting that data collection is still at early stages, so longer term trends directly reported from the data will be unavailable. 
+
+- <span style="background-color:lightyellow">The data's accuracy may be compromised as it relies on officers' subjective reporting of race, gender, and ethnicity, which does not capture the complexity of intersectional identities and can lead to misidentification.</span>
+- <span style="background-color:lightyellow">The absence of officer-level demographic information limits the understanding of the dynamics behind policing actions, such as the correlation between the officers' race and their policing behaviors.</span>
+- <span style="background-color:lightyellow">The Virginia Community Policing Act data is relatively recent and has undergone changes in collection requirements, resulting in gaps and limiting the ability to observe long-term trends.</span>
+
+## Extension
+This project sought to explore patterns of race within police stops in Albemarle County, Virginia. While no causal relationships can be drawn given the limitations of the data, this project illuminates patterns that were found in the data. If the group had more time, the intersection of gender and ethnicity alongside race would have been explored to further determine which trends prevail. **One of the most significant contributions of this project was the overlaying of police beats onto Albemarle County demographic data that can help researchers start to tell the story of policing in the county.** It is the hope that researchers can use this mapping to further explore trends in policing and shed light onto the racial injustices that exist. 
+
+## References
+_ACPD releases numbers from second speed enforcement effort._ (2024, March 1). CBS19 News. https://www.cbs19news.com/story/50521051/acpd-releases-numbers-from-second-speed-enforcement-effort 
+
+Allen, S. (2024, April 16). ACPD gives an inside look at distracted driving traffic stops. CBS19 News. https://www.cbs19news.com/story/50677987/acpd-gives-an-inside-look-at-distracted-driving-traffic-stops 
+
+Biased-Based Profiling—CCHR. (n.d.). https://www.nyc.gov/site/cchr/law/biased-based-profiling.page
+
+Bocar A. Ba et al.,The role of officer race and gender in police-civilian interactions in Chicago.Science 371,696-702 (2021). DOI:10.1126/science.abd8694
+
+_Citizens Advisory Committee | Albemarle County, VA._ (n.d.). Albemarle County.  https://www.albemarle.org/government/police/citizens-advisory-committee 
+
+_Code of Virginia Code—Chapter 6.1. Virginia Community Policing Act._ (n.d.). Virginia Law. https://law.lis.virginia.gov/vacodefull/title52/chapter6.1/ 
+
+Community Policing Act Data Collection: Instructions and Technical Specifications (Version 5.3). (2023). Virginia State Police.
+
+Community Policing Data Act – Police and Public Safety. (n.d.).  https://police.gmu.edu/community-policing-data-act/
+
+_Districts | Virginia Department of Transportation._ (2024). VDOT. https://www.vdot.virginia.gov/about/districts/ 
+Glass, M. (2024a, February 27). _29Investigates: Albemarle and Charlottesville pedestrian safety._ https://www.29news.com/2024/02/27/vdot-aims-make-route-29-other-roads-safer-pedestrians/ 
+
+Glass, M. (2024b, March 20). _People in Charlottesville are now able to rate their interactions with police officers._ https://www.29news.com/2024/03/20/people-charlottesville-are-now-able-rate-their-interactions-with-police-officers/ 
+
+Hemphill, E. (2024, March 2). _Albemarle County police issue more than 100 speeding tickets in 1 day._ The Daily Progress. https://dailyprogress.com/news/local/crime-courts/albemarle-county-police-issue-more-than-100-speeding-tickets-in-1-day/article_5e45f992-d8cf-11ee-96bb-c7446bd09e84.html 
+
+Kevin Guyan. (2022). Queer Data: Using Gender, Sex and Sexuality Data for Action. Introduction- Data and Difference, Chapter 5-Straightwashing: The cleaning and analysis of queer data.
+
+Martin, L. (2021, April 2). _St. George Avenue Residents Demand Traffic Calming | Crozet Gazette._ https://www.crozetgazette.com/2021/04/02/st-george-avenue-residents-demand-traffic-calming/ 
+
+Martin, L. (2023, September 8). _Crime and Policing in Crozet and Albemarle | Crozet Gazette._ https://www.crozetgazette.com/2023/09/08/crime-and-policing-in-crozet-and-albemarle/ 
+
+Report on Analysis of Traffic Stop Data Collected Under Virginia’s Community Policing Act (p. 62). (2023). Virginia Department of Criminal Justice Services. https://rga.lis.virginia.gov/Published/2023/RD340/PDF
+
+_Speed limits | Virginia Department of Transportation._ (2024). VDOT. https://www.vdot.virginia.gov/about/our-system/highways/speed-limits/ 
+
+Stith, B. (2023, August 9). _Charlottesville police working to address statewide traffic stop bias._ https://www.29news.com/2023/08/09/charlottesville-police-working-address-statewide-traffic-stop-bias/ 
+
+Virginia Community Policing Act Data | Albemarle County, VA. (n.d.).  https://www.albemarle.org/government/police/virginia-community-policing-act-data
+
+Yager, J. (2016, June 15). _Searching for solutions: Why are black kids arrested more often than white kids?_ C-VILLE Weekly. https://www.c-ville.com/searching-solutions-black-kids-arrested-often-white-kids/ 

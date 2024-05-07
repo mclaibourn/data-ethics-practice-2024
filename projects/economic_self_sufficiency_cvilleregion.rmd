@@ -1,0 +1,890 @@
+---
+title: "Landscape Scan of Charlottesville and Albemarle's Economic Sufficiency Standards"
+date: "May 6, 2024"
+author: "Sarah Kim, Victoria Kim, and Josh McCray"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+
+# Setup
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+```
+
+```{r libraries}
+
+# Load libraries
+
+library(tidyverse)
+library(janitor)
+library(dplyr)
+library(forcats)
+library(scales)
+library(plotly)
+library(reactable)
+library(reactablefmtr)
+library(rcartocolor)
+library(ggthemes)
+library(RColorBrewer)
+library(ggforce)
+library(viridis)
+
+```
+
+```{r load data}
+
+# Load in data
+
+merged_data <- read.csv("../data/merged_data.csv")
+
+ess <- read_csv("../data/cvlregion_uwselfsufficiencystandards.csv")
+
+merged2_data = merged_data
+
+merged3 = merged2_data %>%
+  drop_na(below_regioness)
+
+```
+
+## Introduction
+
+This project examines economic sufficiency standards in Charlottesville, Virginia, through survey data collected from the Public Use Microdata Sample (PUMS) files. The City of Charlottesville is in Albemarle County, Virginia, a region whose history is plagued with slavery, racism, and inequality. Charlottesville is home to the University of Virginia (UVA), however, Charlottesville is also home to approximately 45,000  residents. Although Charlottesville is often thought of in close association to UVA, the town-gown relationship between UVA and the greater Charlottesville community is complex. The violent and unprecedented Unite the Right Rallies that took place in Charlottesville in 2017 underscore the presence of racism and classism that are deeply rooted in Charlottesville’s history.  
+
+Systemic racism, as well as other patterns of discrimination, bias, and inequality, have shaped living conditions, employment, and overall economic well-being in the United States, and Charlottesville is no exception. Empirical evidence demonstrates that Black and Brown communities, as well as other non-white racial and ethnic groups, have a harder time meeting economic sufficiency thresholds due to systematic, discriminatory barriers.
+
+### Statement from the Authors
+
+As authors, we believe that it is integral to be transparent in our process and discuss our backgrounds before discussing our analysis. To begin, we want to disclose that we are students who are all guests in the Charlottesville region. None of us grew up in the region, but we have had the privilege to call Charlottesville home during our time as students at the University of Virginia. Our backgrounds bring both advantages and limitations to our understanding of the region. Our perspective on this research is influenced by our personal experiences and academic training. We also want to disclose that we have not had to face the challenges that many of our fellow humans represented in this data have, such as food and housing insecurity. We approach this data from a privileged position and invite critical engagement with our findings. We recognize that our perspectives do not offer a complete picture of the region and that our analysis lacks representation from the communities this data represents and is intended to serve. If given more time, we would try to address this gap in our analysis by engaging with citizens in the Charlottesville region and collecting more quantitative data as well as qualitative interviews.  
+
+In recognizing these limitations, we want to highlight the importance of approaching our findings with caution and humility. Moving forward, we advocate for inclusive data collection methods that prioritize the voices and experiences of communities to allow for more equitable and inclusive data that will allow for better research and analysis. 
+
+## Resource Review
+
+There were two main sources that informed our project’s questions, analysis and visualizations. The first is a report from the U.S. Office of Planning Research and Evaluation (OPRE) entitled *Defining, Measuring, and Supporting Economic Well-Being in Early Childhood Home Visiting: A Review of Research and Practices*. The second article is *Families’ Job Characteristics and Economic Self-Sufficiency: Differences by Income, Race-Ethnicity, and Nativity* by Walters et al.  
+
+***Defining, Measuring, and Supporting Economic Well-Being in Early Childhood Home Visiting: A Review of Research and Practices.* (n.d.). Retrieved April 8, 2024, from https://www.acf.hhs.gov/opre/report/defining-measuring-and-supporting-economic-well-being-early-childhood-home-visiting**  
+
+The purpose of this report was to describe findings from literature and document reviews exploring how to define, measure, and support family economic well-being. The authors approached this goal with several audiences in mind, including other researchers and policy makers. The key findings of this report include:  
+
+* A family’s ability to achieve economic well-being can be influenced by historical and systematic racism as well as gender inequality. This can impact a family’s economic resources and access to diverse funding streams, such as lines of credit. 
+* There are not consistent definitions of measures of economic wellbeing and how to evaluate changes in family economic wellbeing over time. This creates challenges in analysis and data collection.  
+
+This paper helped us shape our analysis, scope, and research questions. As such, we want to extend our gratitude to the authors and editors at OPRE who helped publish this report for their research and inspiration.  We would also like to recognize how this paper’s insightful narrative pushed us to think about who our work will be reaching and who it should be written to address and serve.  
+
+**Joshi, P., Walters, A. N., Noelke, C., & Acevedo-Garcia, D. (2022). Families’ Job Characteristics and Economic Self-Sufficiency: Differences by Income, Race-Ethnicity, and Nativity. *RSF: The Russell Sage Foundation Journal of the Social Sciences,* 8(5), 67–95. https://doi.org/10.7758/RSF.2022.8.5.04**  
+
+This study estimates the family budget gap which the authors calculate to be “the difference between how the earnings from parents’ full-time work stack up against the resources needed to meet a family budget.” The findings of the report include:
+
+* Less than one quarter of low-income families earn enough money to cover a basic budget and these families would need to earn about $11.00 more per hour to cover their basic expenses.
+* The wage gap is larger for Black and Hispanic families. Immigrants also experience a larger wage-gap.  
+* Child opportunity gaps by income, race-ethnicity, and nativity will continue to exist unless measures are taken to decrease wage inequality and provide parents access to higher paying jobs with more benefits.  
+
+This source was used as an exemplary model for how we can incorporate effective visuals and tables into our project. This article also helped provide context for our research and helped us understand what variables/household characteristics may be helpful when creating region-level standards for the City of Charlottesville and Albemarle County as well as providing evidence for how certain demographics of the population are affected disproportionately by various economic barriers, including the wage gap. 
+
+## Sampling and Methodology
+
+This report relies on the American Community Survey's public-use microdata sample (PUMS) for the Charlottesville and Albemarle areas. These data provide detailed insights into the demographics and socio-economic profiles of the community including information on wages, employment patterns, household structures, and resource access and availability. By using this microdata, the report more accurately can gauge the number of families with incomes below regional self-sufficiency levels and analyze their characteristics. Relying solely on summary tables from the Census would result in a limited scope focusing on geography, income, and racial categories but the PUMS data allows for a more comprehensive examination of the data. It also allows the report to humanize the data more, understanding that each number or point is an individual's life.  
+
+It is also important to note that PUMS data covers the entire region and cannot be disaggregated by specific localities or neighborhoods, outside of Charlottesville and Albemarle county. This is why the report opts to use regional economic sufficiency standards, in order to understand the data most accurately. There was also no temporal component to this data, so the report provides an overall landscape scan at one moment in time.
+
+### Defining Economic Self Sufficiency: Competing Standards
+
+Prior to delving into the data and analysis of this project, and exploring economic self-sufficiency in Charlottesville and Albemarle, we must distinguish the difference between income and earnings. Income refers to the total flow of money an individual or household receives over a specific period. Income often encompasses various sources like salaries and governmental assistance programs. Earnings, however, specifically pertains to the amount of money someone receives for labor, such as wages for hourly work. Earnings is defined to capture how an individual contributes to the greater labor market or workforce.  
+
+Before beginning our analysis, we must also distinguish between the two competing Economic Self -Sufficient Standards, The University of Washington's Economic Self-Sufficiency Standard (UW ESS) and the Massachusetts Institute of Technology's Economic Self-Sufficiency Standard (MIT ESS). Both standards are used to measure the income an individual or household needs to achieve self-sufficiency, however, the two standards vary on methodology, scope, and regional sensitivity. For example, the UW ESS includes costs of healthcare, like health care premiums and out of pocket costs, while the MIT ESS does not. The UW ESS considers more realistic assumptions about food prep and meal consumption than the MIT ESS but does not consider take-out or restaurant meals. The UW ESS also includes clothing, shoes, paper products, diapers, nonprescription medicines, cleaning products, household items, personal hygiene items, and telephone service, however, it does not allow for recreation, entertainment, savings, or debt repayment which can limit its applications. One of the largest advantages of the UW ESS is that it is sensitive to regional differences, such as cost of living. The MIT ESS, on the other hand, uses a standardized approach that limits specificity more than the UW ESS. The regional sensitivity of the UW ESS allows for more accurate representations of the economic challenges families face. For these reasons, we chose to use the UW ESS as we thought it better captured the uniqueness and regionality of Charlottesville.
+
+Additionally, we utilized regional self-sufficiency standards that calculated the median ESS for each unique family composition, taking into account the number of adults, infants, pre-K and school-aged children, and teenagers, among the following counties: Albemarle County, Charlottesville City, Fluvanna County, Greene County, Louisa County, and Nelson County. Using the Charlottesville-specific ESS led to minimal differences between those who qualified as meeting versus not meeting ESS.
+
+## Research Questions
+
+This project are centered around the following questions:
+
+1. What are the general background and demographics of those above and below region economic sufficiency standards in Charlottesville and Albemarle?
+2. How does family composition differ by region economic sufficiency standards in Charlottesville and Albemarle?
+3. How does access to household resources differ by region economic sufficiency standards for Charlottesville and Albemarle residents?
+4. How does homeownership status differ by region economic sufficiency standards for Charlottesville and Albemarle residents?
+5. How does employment differ by region economic sufficiency standards for Charlottesville and Albemarle residents?
+
+## Analysis of Research Questions
+### Background and Demographics
+
+#### Race {.tabset}
+
+A majority of residents who meet region economic sufficiency standards are white along with smaller proportions of Black or African American, Asian, or bi-racial residents. In comparison, white residents still make up the highest proportion of those not meeting region economic sufficiency standards but there are also increased rates for Black or African American, Asian, and bi-racial individuals.  
+
+We opted not to include the visualization for the ethnicity distribution because there are 100 distinct groups, making it difficult to display the data effectively and the trends are not much different than what we see with race. 
+
+##### Visualization
+```{r race}
+
+# Graph for race
+
+merged_data %>%
+  drop_na(below_regioness) %>%
+  count(below_regioness, rac1p) %>% 
+  group_by(below_regioness) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ggplot(aes(x = factor(rac1p), y = prop, fill = rac1p)) +
+  geom_col() +
+  facet_wrap(~below_regioness) +
+  scale_x_discrete(labels = c("1" = "White alone",
+                              "2" = "Black or African American alone",
+                              "3" = "American Indian alone",
+                              "4" = "Alaska Native alone",
+                              "5" = "American Indian or Alaska Native",
+                              "6" = "Asian alone",
+                              "7" = "Hawaiian and Other Pacific Islander alone",
+                              "8" = "Some Other Race alone",
+                              "9" = "Two or More Races")) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 0.9)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_carto_c(palette = "Safe") + 
+  guides(fill = "none") +
+  labs(title = "Race Distribution by Regional Economic Sufficiency Standards", x = "Race", y = "Proportion") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_text(aes(label = n),
+            position = position_dodge(width = 0.5), vjust = -0.5, size = 3)
+
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standarsd and counted. The numbers of residents above the standards were calculated by race and then divided by the overall number of individuals above to find the proportions. The same method was used for residents below the standards for each race marker provided in the PUMS data.  
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+#### Age {.tabset}
+
+Older adults are a majority of those who are above region economic sufficiency standards in Charlottesville and Albemarle, as shown in the data by the slight left-skew. Alternatively, there is an almost bimodal distribution of those below region economic sufficiency standards with particularly high levels of residents in their early twenties. The median age across the sample of all individuals is 40 years old, as noted by the dashed red line.
+
+##### Visualization
+```{r age}
+
+# Graph for age
+
+median_value <- median(merged_data$agep)
+
+merged_data %>% 
+  drop_na(below_regioness) %>% 
+  ggplot(aes(x = agep, fill = below_regioness, color = below_regioness)) +
+  geom_histogram(position = "identity", alpha = 0.5) +
+  geom_vline(aes(xintercept = median(agep)), color = "red", linetype = "dashed", size = 0.5) +
+  annotate("text", x = median_value, y = -1, label = paste("Median:", median_value), color = "black", 
+           hjust = 1, vjust = 1.25, size = 3) +
+  scale_fill_manual(values=c("#88CCEE", "#DDCC77"), name = "Region Economic\nSufficency Standards") +
+  scale_color_manual(values=c("#88CCEE", "#DDCC77", name = "Region Economic\nSufficency Standards")) +
+  labs(title = "Age Distribution by Region Economic Sufficiency Standards", x = "Age", y = "Frequency", fill =
+         "Region Economic\nSufficency Standards") +
+  theme(plot.title = element_text(hjust = 0.5))
+  
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below the region economic sufficiency standard and counted by age. 
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+#### Children in the Household {.tabset}
+
+The greater the number of children in a household, the greater amount of a family's economic resources will be required to support them. Costs that should be considered include child care costs, food, and entertainment costs. The visualization shows that for households not meeting regional economic sufficiency standards, they tend to have more children (particularly more than three ) compared to households that meet regional economic sufficiency standards. The majority of households, both above and below the regional standards, tend to have no children.
+
+##### Visualization
+```{r children}
+
+merged_data %>% 
+  drop_na(below_regioness) %>% 
+  count(below_regioness, c) %>% 
+  group_by(below_regioness) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ggplot(aes(x = factor(c), y = prop, fill = c)) +
+  scale_fill_carto_c(palette = "Safe") + 
+  geom_col() +
+  facet_wrap(~below_regioness) +
+  guides(fill = "none") +
+  labs(title = "Proportion of Number of Children in a Household by Regional Economic Sufficiency Standards", 
+       x = "Number of Children", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + 
+  theme(plot.title = element_text(hjust = 0.5, size = 11)) +
+    geom_text(aes(label = n),
+            position = position_dodge(width = 0.5), vjust = -0.5, size=3)
+
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards and counted. The number of children in households above the standards were calculated and then divided by the overall number of households above to find the proportions. The same method was used for residents below the standards for each number of children provided in the PUMS data.  
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+  
+#### Educational Attainment {.tabset}
+
+For residents who meet regional economic sufficiency standards, a majority of individuals posses a Bachelor's degree but there are also relatively high levels of residents with no high school degree, high school degrees, or Master's or other professional degrees. For residents who do not meet regional economic sufficiency standards, a majority do not have a high school degree and there are decreasing numbers of degree attainment based on the length of school required. 
+
+##### Visualization 
+```{r education}
+
+# Clean data
+
+merged_data <- merged_data %>% 
+  mutate(
+    worker_class = 
+      fct_recode(as.factor(cow), 
+                 private = "1", nonprofit = "2", 
+                 gov_local = "3", gov_state = "4", 
+                 gov_federal = "5", self_emp = "6", 
+                 self_emp = "7", other = "8", other = "9"),
+    wages = ifelse(worker_class == "self_emp", semp, wagp),
+    schl_num = as.integer(schl),
+    educ_att = case_when(
+      schl_num <= 15 ~ "no_highschool",
+      schl_num > 15 & schl_num <= 18 ~ "highschool",
+      schl_num > 18 & schl_num <= 20 ~ "somecollege",
+      schl_num == 21 ~ "bachelors",
+      schl_num == 22 | schl_num == 23 ~ "masters/professional",
+      schl_num == 24 ~ "doctorate"),
+    educ_att = factor(educ_att,
+                      levels = c("no_highschool", "highschool",
+                                 "somecollege", "bachelors",
+                                 "masters/professional", "doctorate")),
+  )
+
+# Graph
+
+merged_data %>% 
+  filter(!is.na(below_regioness)) %>%
+  count(below_regioness, educ_att) %>% 
+  group_by(below_regioness) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ggplot(aes(x = factor(educ_att), y = prop, fill = educ_att)) +
+  geom_col() +
+  facet_wrap(~ below_regioness) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_discrete(labels = c("No High School", "High School", "Some College", "Bachelors", "Masters/Professional", "Doctorate")) +
+  scale_fill_carto_d(palette = "Safe") + 
+  labs(title = "Degree Attainment by Regional Economic Sufficiency Standards", x = "Educational Attainment", y = "Proportion") +
+  guides(fill = "none") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_text(aes(label = n),
+            position = position_dodge(width = 0.5), vjust = -0.5, size=3)
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards and counted. The highest degree attained per resident was counted and then divided by the overall number of individuals above the standard to find the proportions. The same method was used for residents below the standards for each iteration of educational attainment provided in the PUMS data.  
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+### Family Composition 
+
+The greater presence of adults in a household implies greater opportunity for accumulating economic resources for the family and greater likelihood of meeting regional economic sufficiency standards. When focusing on households that meet regional economic self sufficiency standards, a majority of households classify as having two adults and no children. The same trend is found for households that do not meet regional economic sufficiency standards. Households with two adults tend to be meeting the region ESS at higher counts compared to other household compositions. Similar to the above analysis on the number of children, we would expect that the greater number of children would also require more economic resources. 
+
+#### Table of Family Compositions that Meet Regional Economic Sufficiency Standards {.tabset}
+
+##### Table
+```{r family1}
+
+library(DT)
+
+merged_data <- merged_data %>% 
+  mutate(a = str_extract(family_type, "(?<=a)\\d+"), # create # adults in a
+         adults = ifelse(a>3, 4, a), # truncate more than 3 adults
+         children = ifelse(c>3, 4, c), # truncate more tha 3 children
+         fam_type_reduced = paste0("a", adults, "c", children)) 
+
+# Region-specific ESS
+region_ess <- ess %>% 
+  rowwise() %>% 
+  mutate(median_sss = median(c_across(where(is.numeric)))) %>% 
+  select(family_type, median_sss)
+
+# Create reduced region_ess
+region_ess_reduced <- region_ess %>%
+  mutate(a = as.numeric(str_extract(family_type, "(?<=a)\\d+")),
+         i = as.numeric(str_extract(family_type, "(?<=i)\\d+")),
+         p = as.numeric(str_extract(family_type, "(?<=p)\\d+")),
+         s = as.numeric(str_extract(family_type, "(?<=s)\\d+")),
+         t = as.numeric(str_extract(family_type, "(?<=t)\\d+")),
+         ch = as.numeric(str_extract(family_type, "(?<=c)\\d+")),
+         c = i+p+s+t,
+         c = ifelse(is.na(c), ch, c),
+         adults = ifelse(a>3, 4, a), # truncate more than 3 adults
+         children = ifelse(c>3, 4, c), # truncate more tha 3 children
+         fam_type_reduced = paste0("a", adults, "c", children)) %>%
+  group_by(fam_type_reduced) %>%
+  summarize(median_sss = median(median_sss),
+            median_sss = round(median_sss, digits = 2))
+  # mutate(median_sss = dollar(median_sss)) 
+
+merged_data_table <- merged_data %>%  
+  filter(!is.na(below_regioness), below_regioness == "Meeting Region ESS",
+       !(fam_type_reduced %in% c("a0c1", "a11c0"))) %>%
+  count(fam_type_reduced) %>%
+  mutate(percent = n / sum(n) * 100,
+         across(percent, round, 1)) %>% 
+  select(fam_type_reduced:percent)
+
+final_merge <- left_join(merged_data_table, region_ess_reduced, by = "fam_type_reduced")
+
+final_merge <- final_merge %>% 
+  mutate(fam_type_reduced = recode_factor(fam_type_reduced, 
+                                          "a4c4" = "4 Adults, 4 Children", "a4c3" = "4 Adults, 3 Children",
+                                          "a4c2" = "4 adults, 2 Children", "a4c1" = "4 Adults, 1 Child",
+                                          "a4c0" = "4 Adults, No Children","a3c4" = "3 Adults, 4 Children",
+                                          "a3c3" = "3 Adults, 3 Children","a3c2" = "3 Adults, 2 Children",
+                                          "a3c1" ="3 Adults, 1 Child", "a3c0" = "3 Adults, No Children",
+                                          "a2c4" = "2 Adults, 4 Children","a2c3" = "2 Adults, 3 Children",
+                                          "a2c2" = "2 Adults, 2 Children", "a2c1" = "2 Adults, 1 Child",
+                                          "a2c0" = "2 Adults, No Children", "a1c4" = "1 Adult, 4 Children",
+                                          "a1c3" = "1 Adult, 3 Children", "a1c2" = "1 Adult, 2 Children",
+                                          "a1c1" = "1 Adult, 1 Child", "a1c0" = "1 Adult, No Children",
+                                          .ordered = TRUE)) %>%
+  select(fam_type_reduced:median_sss)
+  # datatable(colnames = c("Family Composition", "n", "Percent Meeting Region ESS (%)", "Median Region ESS"))
+
+reactable(final_merge,
+          columns = list(
+            fam_type_reduced = colDef(name = "Family Composition"),
+            n = colDef(name = "Number"),
+            percent = colDef(name = "Percent Meeting Region ESS (%)", style = color_scales(final_merge,colors = rcartocolor::carto_pal(n = 4, "Safe"))),
+            median_sss = colDef(name = "Median Region ESS", format = colFormat(prefix = "$", separators = TRUE), 
+                                style = color_scales(final_merge, colors = rcartocolor::carto_pal(n = 4, "Safe")))))
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were first filtered by households that meet regional economic sufficiency standards and then separated by household composition, specifically by the number of adults and children in each home. Different family compositions were counted, as shown by the "n" denotation in the table, and then divided by the overall number of households to find the shares per composition group. The family composition and median region ESS value were truncated to narrow the number of family compositions shown in the final table. 
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+#### Table of Family Compositions that Do Not Meet Regional Economic Sufficiency Standards {.tabset}
+
+##### Table
+```{r family}
+
+merged_data %>%
+  filter(!is.na(below_regioness), below_regioness == "Not Meeting Region ESS",
+       !(fam_type_reduced %in% c("a0c1", "a11c0"))) %>%
+  mutate(fam_type_reduced = recode_factor(fam_type_reduced, "a4c4" = "4 Adults, 4 Children", "a4c3" = "4 Adults, 3 Children",
+                                          "a4c2" = "4 adults, 2 Children", "a4c1" = "4 Adults, 1 Child",
+                                          "a4c0" = "4 Adults, No Children","a3c4" = "3 Adults, 4 Children",
+                                          "a3c3" = "3 Adults, 3 Children","a3c2" = "3 Adults, 2 Children",
+                                          "a3c1" ="3 Adults, 1 Child", "a3c0" = "3 Adults, No Children",
+                                          "a2c4" = "2 Adults, 4 Children","a2c3" = "2 Adults, 3 Children",
+                                          "a2c2" = "2 Adults, 2 Children", "a2c1" = "2 Adults, 1 Child",
+                                          "a2c0" = "2 Adults, No Children", "a1c4" = "1 Adult, 4 Children",
+                                          "a1c3" = "1 Adult, 3 Children", "a1c2" = "1 Adult, 2 Children",
+                                          "a1c1" = "1 Adult, 1 Child", "a1c0" = "1 Adult, No Children",
+                                          .ordered = TRUE)) %>%
+  count(fam_type_reduced) %>%
+  mutate(percent = n / sum(n) * 100,
+         across(percent, round, 1)) %>%
+  select(fam_type_reduced:percent) %>%
+  datatable(colnames = c("Family Composition", "n", "Percent Not Meeting Region ESS (%)"))
+
+
+
+
+merged_data_table <- merged_data %>%  
+  filter(!is.na(below_regioness), below_regioness == "Not Meeting Region ESS",
+       !(fam_type_reduced %in% c("a0c1", "a11c0"))) %>%
+  count(fam_type_reduced) %>%
+  mutate(percent = n / sum(n) * 100,
+         across(percent, round, 1)) %>% 
+  select(fam_type_reduced:percent)
+
+final_merge <- left_join(merged_data_table, region_ess_reduced, by = "fam_type_reduced")
+
+final_merge <- final_merge %>% 
+  mutate(fam_type_reduced = recode_factor(fam_type_reduced, 
+                                          "a4c4" = "4 Adults, 4 Children", "a4c3" = "4 Adults, 3 Children",
+                                          "a4c2" = "4 adults, 2 Children", "a4c1" = "4 Adults, 1 Child",
+                                          "a4c0" = "4 Adults, No Children","a3c4" = "3 Adults, 4 Children",
+                                          "a3c3" = "3 Adults, 3 Children","a3c2" = "3 Adults, 2 Children",
+                                          "a3c1" ="3 Adults, 1 Child", "a3c0" = "3 Adults, No Children",
+                                          "a2c4" = "2 Adults, 4 Children","a2c3" = "2 Adults, 3 Children",
+                                          "a2c2" = "2 Adults, 2 Children", "a2c1" = "2 Adults, 1 Child",
+                                          "a2c0" = "2 Adults, No Children", "a1c4" = "1 Adult, 4 Children",
+                                          "a1c3" = "1 Adult, 3 Children", "a1c2" = "1 Adult, 2 Children",
+                                          "a1c1" = "1 Adult, 1 Child", "a1c0" = "1 Adult, No Children",
+                                          .ordered = TRUE)) %>%
+  select(fam_type_reduced:median_sss)
+  # datatable(colnames = c("Family Composition", "n", "Percent Meeting Region ESS (%)", "Median Region ESS"))
+
+reactable(final_merge,
+          columns = list(
+            fam_type_reduced = colDef(name = "Family Composition"),
+            n = colDef(name = "Number"),
+            percent = colDef(name = "Percent Not Meeting Region ESS (%)", 
+                             style = color_scales(final_merge,colors = rcartocolor::carto_pal(n = 4, "Safe"))),
+            median_sss = colDef(name = "Median Region ESS", format = colFormat(prefix = "$", separators = TRUE), 
+                                style = color_scales(final_merge, colors = rcartocolor::carto_pal(n = 4, "Safe")))))
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were first filtered by households that did not meet regional economic sufficiency standards and then separated by household composition, specifically by the number of adults and children in each home. Different family compositions were counted, as shown by the "n" denotation in the table, and then divided by the overall number of households to find the shares per composition group. The family composition and median region ESS value were truncated to narrow the number of family compositions shown in the final table. 
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+#### Family Composition Visualization {.tabset}
+
+##### Visualization
+```{r family comp}
+
+# Clean data
+
+# merged_data <- merged_data %>% 
+#   mutate(a = str_extract(family_type, "(?<=a)\\d+"), # create # adults in a
+#          adults = ifelse(a>3, 4, a), # truncate more than 3 adults
+#          children = ifelse(c>3, 4, c), # truncate more tha 3 children
+#          fam_type_reduced = paste0("a", adults, "c", children)) 
+
+# Graph
+merged_data %>%
+  filter(!(fam_type_reduced %in% c("a0c1", "a11c0")), # get rid of odd categories
+         !is.na(below_regioness)) %>% 
+    mutate(fam_type_reduced = recode_factor(fam_type_reduced, "a4c4" = "4 Adults, 4 Children", "a4c3" = "4 Adults, 3 Children",
+                                          "a4c2" = "4 adults, 2 Children", "a4c1" = "4 Adults, 1 Child",
+                                          "a4c0" = "4 Adults, No Children","a3c4" = "3 Adults, 4 Children",
+                                          "a3c3" = "3 Adults, 3 Children","a3c2" = "3 Adults, 2 Children",
+                                          "a3c1" ="3 Adults, 1 Child", "a3c0" = "3 Adults, No Children",
+                                          "a2c4" = "2 Adults, 4 Children","a2c3" = "2 Adults, 3 Children",
+                                          "a2c2" = "2 Adults, 2 Children", "a2c1" = "2 Adults, 1 Child",
+                                          "a2c0" = "2 Adults, No Children", "a1c4" = "1 Adult, 4 Children",
+                                          "a1c3" = "1 Adult, 3 Children", "a1c2" = "1 Adult, 2 Children",
+                                          "a1c1" = "1 Adult, 1 Child", "a1c0" = "1 Adult, No Children",
+                                          .ordered = TRUE)) %>%
+  ggplot(aes(x = fam_type_reduced, fill = stat(count))) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = stat(count), hjust = -0.2, vjust = 0.5), size = 3) +  # Adjusting label position
+  guides(fill = "none") +
+  facet_wrap(~below_regioness) +
+  coord_flip() +
+  labs(title = "Family Composition Distribution by Regional Economic Sufficiency Standards", x = "Family Composition", y = "Count") +
+  theme(plot.title = element_text(hjust = 1, size = 11)) +
+  scale_y_continuous(limits = c(0, 3400))
+
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards. Family compositions were identified by the number of adults and children in the same household and counted.  
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+### Access to Household Resources
+
+#### Internet and Broadband {.tabset}
+
+There are generally high proportions of households that have access to both internet and broadband regardless of regional economic sufficiency standards. However, there are some noticeable differences. More households that do not meet regional economic sufficiency standards do not have internet access, moreso than the comparisons for broadband access. Nearly every household has access to broadband and there are similar proportions of homes that do not based on the standards. This is a good indication that internet access maybe a better tool for determining whether or not resource availability differs based on regional economic sufficiency standards.
+
+##### Visualization (Internet)
+
+```{r internet}
+
+# Graph
+
+merged_data %>% 
+  filter(!is.na(below_regioness)) %>%
+  count(below_regioness, accessinet) %>% 
+  group_by(below_regioness) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ggplot(aes(x = factor(accessinet, 
+                        labels = c("Yes, by paying a provider",
+                                   "Yes, without paying a provider",
+                                   "No access to the Internet at home")), 
+             y = prop, fill = accessinet)) +
+  geom_col() +
+        scale_fill_carto_c(palette = "Safe") + 
+  facet_wrap(~ below_regioness) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Internet Access by Regional Economic Sufficiency Standards", x = "Internet Access", y = "Proportion") +
+      scale_y_continuous(labels = percent_format(accuracy = 1)) + 
+   scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 1)) +
+  guides(fill = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+    geom_text(aes(label = n),
+            position = position_dodge(width = 0.5), vjust = -0.5, size=3)
+
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards and counted. Whether or not a household had access to internet was counted and then divided by the overall number of individuals above the standard to find the proportions. The same method was used for residents below the standards for internet access provided in the PUMS data.  
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+##### Visualization (Broadband)
+
+```{r broadband}
+
+# Graph
+
+merged_data %>% 
+  filter(!is.na(below_regioness), !is.na(broadbnd)) %>% 
+  count(below_regioness, broadbnd) %>% 
+  group_by(below_regioness) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ggplot(aes(x = as.factor(broadbnd), y = prop, fill = broadbnd)) +
+  geom_col() +
+  facet_wrap(~ below_regioness) +
+  scale_x_discrete(labels = c("Yes", "No")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      scale_fill_carto_c(palette = "Safe") + 
+  labs(title = "Broadband Access by Regional Economic Sufficiency Standards", x = "Broadband Access", y = "Proportion") +
+    scale_y_continuous(labels = percent_format(accuracy = 1)) + 
+     scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 1)) +
+      guides(fill = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+      geom_text(aes(label = n),
+            position = position_dodge(width = 0.5), vjust = -0.5, size=3)
+
+```
+
+##### About 
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards and counted. Whether or not a household had access to broadband was counted and then divided by the overall number of individuals above the standard to find the proportions. The same method was used for residents below the standards for broadband access provided in the PUMS data.  
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+
+#### Number of Vehicles {.tabset}
+
+For homes meeting regional economic sufficiency standards, there are generally higher numbers of vehicles available to use. These homes are most likely to have two or three vehicles, while homes that do not meet the regional economic sufficiency standards are most likely to have one or two. Even when looking at the shares of homes that do not have any vehicles available, there are significant distinctions based on the regional economic sufficiency standards with homes that do not meet the standards being around four times as likely to not have a vehicle available. 
+
+##### Visualization
+```{r vehicles}
+
+# Graph
+
+merged_data %>% 
+  drop_na(below_regioness) %>% 
+  count(below_regioness, veh) %>% 
+  group_by(below_regioness) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ggplot(aes(x = factor(veh), y = prop, fill = veh)) +
+  scale_fill_carto_c(palette = "Safe") + 
+  geom_col() +
+  facet_wrap(~below_regioness) +
+  guides(fill = "none") +
+    labs(title = "Number of Vehicles Available by Regional Economic Sufficiency Standards", x = "Number of Vehicles Available", y = "Proportion") +
+    scale_y_continuous(labels = percent_format(accuracy = 1)) + 
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 0.5)) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+      geom_text(aes(label = n),
+            position = position_dodge(width = 0.5), vjust = -0.5, size=3)
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards and counted. The number of vehicles available per household above the standards were calculated and then divided by the overall number of households above to find the proportions. The same method was used for residents below the standards for each number of vehicles available provided in the PUMS data.  
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+### Homeownership Status
+
+#### Tenure {.tabset}
+
+Those who are not meeting regional economic sufficiency standards will more likely be renting homes compared to owning a home given the financial burden that it imposes. The visualization indicates that there are greater proportions of homes that are owned completely or with a mortgage or loan if the occupants meet regional economic sufficiency standards. Additionally, the data also show that significantly high percentages of homes are rented if the occupants do not meet the standards.  
+
+When disaggregated by race, white residents, biracial residents, and those of another racial group outside of the PUMS provided categories are the only racial groups that are much more likely to own their home entirely or with a mortgage or loan. Black or African American and Asian residents are particularly more likely to rent their homes in comparison. It is difficult to draw conclusions about those who are American Indian, Alaska Native, or Hawaiian or Pacific Islander given the low counts of residents in Charlottesville and Albemarle.  
+
+When disaggregated by educational attainment, interesting patterns arise. Residents with no high school degrees and those with Master's or other professional degrees own their homes with a mortgage or a loan at the highest rates while those with doctoral degrees are most frequently owning their home free and clear. Those with some college experience are the most likely to rent their homes, along with residents with a Bachelor's degree.
+
+##### Visualization
+
+```{r mortgage}
+
+# Graph
+
+merged_data %>% 
+  filter(!is.na(below_regioness), !is.na(ten)) %>% 
+  count(below_regioness, ten) %>% 
+  group_by(below_regioness) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ggplot(aes(x = as.factor(ten), y = prop, fill = ten)) +
+  geom_col() +
+  facet_wrap(~ below_regioness) +
+  scale_x_discrete(labels = c("Owned with mortgage or loan", "Owned free and clear", "Rented", "Occupied without payment of rent")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      scale_fill_carto_c(palette = "Safe") + 
+  labs(title = "Homeownership Status by Regional Economic Sufficiency Standards", x = "Homeownership Status", y = "Proportion") +
+    scale_y_continuous(labels = percent_format(accuracy = 1)) + 
+     scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 0.65)) +
+      guides(fill = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+      geom_text(aes(label = n),
+            position = position_dodge(width = 0.5), vjust = -0.5, size=3)
+
+```
+
+##### Visualization (By Race)
+
+```{r by race}
+
+merged_data %>% 
+  filter(!is.na(rac1p), !is.na(ten)) %>% 
+  count(rac1p, ten) %>% 
+  group_by(rac1p) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  mutate(rac1p = factor(as.character(rac1p), 
+                        levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9"),
+                        labels = c("White alone", "Black or African American alone",
+                                   "American Indian Alone", "Alaska Native alone",
+                                   "American Indian or Alaska Native", "Asian alone",
+                                   "Hawaiian or Other Pacific Islander alone",
+                                   "Some Other Race alone", "Two or More Races"))) %>%
+  ggplot(aes(x = as.factor(ten), y = prop, fill = ten)) +
+  geom_col() +
+  facet_wrap(~ rac1p) +
+  scale_x_discrete(labels = c("Owned with mortgage or loan", "Owned free and clear", "Rented", "Occupied without payment of rent")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_carto_c(palette = "Safe") + 
+  labs(title = "Homeownership Status by Race", x = "Homeownership Status", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 1)) +
+  guides(fill = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_text(aes(label = n),
+            position = position_dodge(width = 0.5), vjust = -0.5, size = 3)
+
+
+
+```
+
+##### Visualization (By Educational Attainment)
+```{r by educ att}
+
+merged_data %>% 
+  filter(!is.na(educ_att), !is.na(ten)) %>% 
+  count(educ_att, ten) %>% 
+  group_by(educ_att) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  mutate(educ_att = factor(as.character(educ_att), 
+                        levels = c("no_highschool", "highschool", "somecollege", "bachelors", "masters/professional", "doctorate"),
+                        labels = c("No Highschool", "High School",
+                                   "Some College", "Bachelors",
+                                   "Masters/Professional", "Doctorate"))) %>% 
+  ggplot(aes(x = as.factor(ten), y = prop, fill = ten)) +
+  geom_col() +
+  facet_wrap(~ educ_att) +
+  scale_x_discrete(labels = c("Owned with mortgage or loan", "Owned free and clear", "Rented", "Occupied without payment of rent")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_carto_c(palette = "Safe") + 
+  labs(title = "Homeownership Status by Educational Attainment", x = "Homeownership Status", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 0.8)) +
+  guides(fill = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_text(aes(label = n),
+            position = position_dodge(width = 0.5), vjust = -0.5, size = 3)
+
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards and counted. The homeownership status for each home above the standards were tabulated and then divided by the overall number of households above to find the proportions. The same method was used for homes below the standards for each homeownership status provided in the PUMS data. For each disaggregation, there was no separation by regional economic sufficiency standards, rather just investigated the homeownership and the variable itself. 
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+#### Monthly Rent Payments {.tabset}
+
+The visualization indicates that households that are not meeting regional economic sufficiency standards generally have lower rent costs. For those who meet regional standards, the median rent paid per month is $1,300 while the median is $980 for households that do not meet the standards, as denoted by the dashed red lines. This has implications for families' qualities of life and living in their homes. 
+
+##### Visualization
+```{r rent}
+
+# Graph
+
+med_rent <- merged_data %>% 
+  filter(below_regioness != "NA") %>% 
+  group_by(below_regioness) %>% 
+  summarize(total = n(),
+            med_rent = median(rntp, na.rm = TRUE))
+
+merged_data %>%
+  drop_na(below_regioness) %>%
+  ggplot(aes(x = fct_infreq(below_regioness), y = rntp, color = below_regioness)) +
+  geom_jitter(width = 0.4, height = 0, alpha = 9/10, size = 0.5) +
+  geom_segment(data = med_rent, aes(x = 0, xend = 1, y = 1300), color = "red", linetype = "dashed") +
+  geom_segment(data = med_rent, aes(x = 0, xend = 2, y = 980), color = "red", linetype = "dashed") +
+  geom_point(data = med_rent, aes(y = med_rent), label = "Median", color = "black", size = 3) +
+  annotate("text", x = 2, y = 1250, label = "Median: $980", size = 3, color = "black") +
+  annotate("text", x = 1, y = 1600, label = "Median: $1300", size = 3, color = "black") +
+  labs(title = "Monthly Rent Payments by Region Economic Sufficiency Standards", x = "", y = "Monthly Rent") +
+  scale_fill_manual(values=c("#88CCEE", "#DDCC77")) +
+  scale_color_manual(values=c("#88CCEE", "#DDCC77")) +
+  scale_y_continuous(breaks = c(0, 1000, 2000, 3000, 4000, 5000),
+                     labels = dollar) +  # Format labels into dollars
+  theme(plot.title = element_text(hjust = 0.5)) +
+  guides(color = "none")
+
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards. The monthly rent payments for each household was calculated and plotted onto the graph for both groups. Similarly, the median monthly rent payments were also included to highlight a more nuanced data analysis and to account for any outliers.
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+#### Property Values {.tabset}
+
+Property values are highly relevant to homeowners and can greatly affect generational wealth. Households that are meeting regional economic sufficiency standards have median property values of $370,000 compared to the median value of $250,000 for households that do not meet those standards. Interestingly, there is a $120,000 property value difference between homes that meet and do not meet the standards, yet only a $320 difference in monthly rent payments. This could indicate that residents may be taken advantage of and are overcharged for rent. It is also worth noting that there are increased numbers of homes who meet the regional economic sufficiency standards that have property values of over $3,000,000.
+
+##### Visualization
+```{r property}
+
+med_propval <- merged_data %>% 
+  filter(below_regioness != "NA") %>% 
+  group_by(below_regioness) %>% 
+  summarize(total = n(),
+            med_propval = median(valp, na.rm = TRUE))
+
+merged_data %>%
+  drop_na(below_regioness) %>%
+  ggplot(aes(x = fct_infreq(below_regioness), y = valp, color = below_regioness)) +
+  geom_jitter(width = 0.4, height = 0, alpha = 9/10, size = 0.5) +
+  geom_segment(data = med_propval, aes(x = 0, xend = 1, y = 370000), color = "red", linetype = "dashed") +
+  geom_segment(data = med_propval, aes(x = 0, xend = 2, y = 250000), color = "red", linetype = "dashed") +
+        geom_point(data = med_propval, aes(y = med_propval), label = "Median", color = "black", size = 3) +
+  annotate("text", x = 0, y = 370000, label = "370000", size = 3, color = "black", hjust = 1) +
+  annotate("text", x = 0, y = 250000, label = "250000", size = 3, color = "black", hjust = 1) +
+  annotate("text", x = 2, y = 475000, label = "Median", size = 3, color = "black") +
+  annotate("text", x = 1, y = 600000, label = "Median", size = 3, color = "black") +
+  labs(title = "Property Values by Regional Economic Sufficiency Standards",
+       x = "", y = "Property Values") +
+  scale_fill_manual(values=c("#88CCEE", "#DDCC77")) +
+  scale_color_manual(values=c("#88CCEE", "#DDCC77")) +
+  scale_y_continuous(breaks = c(0, 370000, 250000, 1000000, 2000000, 3000000),
+                     labels = dollar) +  # Format labels into dollars
+  theme(plot.title = element_text(hjust = 0.5)) +
+    guides(color = "none")
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards. The property values for each household were evaluated by PUMS standards and plotted onto the graph for both groups. Similarly, the median property values were also included to highlight a more nuanced data analysis and to account for any outliers.
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+### Employment Dynamics
+
+#### Median Wages Based on Educational Attainment {.tabset}
+
+The visualization highlights that individuals who meet regional economic sufficiency standards have higher median wages for every single level of degree attainment. There are also significant differences in median wages for those above and below regional standards even with the same educational experience, with this trend increasing with additional degrees. For example, there is a $44,000 difference in median wages for individuals with Bachelor's degrees above and below the regional economic sufficiency standards and that difference grows to $68,500 with doctoral degrees. This highlights specific discrepancies in the type of work and monetary valuation of that work for residents above and below the regional standards.
+
+##### Visualization 
+```{r employment dynamics}
+
+# customizing hover information
+education2 <- merged_data %>% 
+  filter(!is.na(educ_att), 
+         !is.na(below_regioness),
+         below_regioness != "other") %>% 
+  group_by(below_regioness, educ_att) %>% 
+  summarize(med_wages = median(wages, na.rm = TRUE)) %>% 
+  ggplot(aes(x = educ_att, y = med_wages, 
+             color = below_regioness, group = below_regioness,
+             text = paste("Above or Below Region ESS:", below_regioness, "<br>",
+                          "Educational Attainment: ", educ_att, "<br>",
+                          "Median wages: ", med_wages))) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Median Wages Based on Educational Attainment by Regional Economic Sufficiency Standards", x = "Educational Attainment", y = "Median Wages",) +
+  scale_color_manual(values = 
+                       c("#76B7B2", "#59A14F", "#EDC948"), 
+                     guide = "none") +
+  scale_y_continuous(labels = label_currency()) +
+  scale_x_discrete(labels = c("No Highschool\nDegree", "Highschool\nGraduate", "Some\nCollege", 
+                              "Bachelors\nDegree", "Masters or Other\nProfessional\nDegree", "Doctoral\nDegree")) +
+  theme_minimal() +
+  theme(legend.position='none') +
+    theme(plot.title = element_text(hjust = 1, size = 9.5))
+
+
+ggplotly(education2, tooltip = c("text"))
+
+```
+
+##### About
+
+* **How did we measure this?**  
+The data were separated by those above or below region economic sufficiency standards. The median wages for every iteration of educational attainment were calculated and plotted on the graph. 
+
+* **Data Sources**  
+  * Self-Sufficiency Standard. (n.d.). Retrieved from Center for Women’s Welfare at the University of Washington website: https://selfsufficiencystandard.org/  
+  * United States Census Bureau. (2022). Public-Use Microdata Samples. Retrieved from The United States Census Bureau - American Community Survey (ACS) website: https://www.census.gov/programs-surveys/acs/microdata.html
+
+## Conclusion
+
+We created this landscape scan project with the hope of humanizing the residents of Charlottesville and using visualization techniques to understand the variation in households within the City of Charlottesville based on different IPUMS household- and person-level data. By utilizing the University of Washington's regional economic self-sufficiency standards, we aim to illuminate the systemic racism at play within Charlottesville as we explore whether households meet these standards and how they vary by demographics such as age, race, and educational attainment. These differences become even clearer when considering how meeting regional ESS status interacts with homeownership status, revealing that homeownership is more distant for households that do not meet the regional ESS. Further work, such as interviewing permanent Charlottesville residents for their experience-based knowledge and anecdotes, could further solidify these homeownership status patterns and trends. While there is much more work to be done, this project has the potential to be critiqued, reiterated, and leveraged in solidarity with the goal for Charlottesville households to achieve economic self-sufficiency and remain strongly rooted within their communities.
+
+## References
+
+*Albemarle County, Virginia—Census Bureau Profile.* (n.d.). Retrieved May 5, 2024, from https://data.census.gov/profile/Albemarle_County,_Virginia?g=050XX00US51003. 
+
+*Charlottesville 2017: The Legacy of Race and Inequity.* (n.d.). Retrieved April 8, 2024, from https://web-p-ebscohost-com.proxy1.library.virginia.edu/ehost/ebookviewer/ebook/bmxlYmtfXzIzNTgzNjVfX0FO0?sid=159009e3-3c6f-4fed-8a5a-14bf00f5fcc1@redis&vid=4&format=EK&rid=1. 
+
+*Defining, Measuring, and Supporting Economic Well-Being in Early Childhood Home Visiting: A Review of Research and Practices.* (n.d.). Retrieved April 8, 2024, from https://www.acf.hhs.gov/opre/report/defining-measuring-and-supporting-economic-well-being-early-childhood-home-visiting. 
+
+Joshi, P., Walters, A. N., Noelke, C., & Acevedo-Garcia, D. (2022). Families’ Job Characteristics and Economic Self-Sufficiency: Differences by Income, Race-Ethnicity, and Nativity. *RSF: The Russell Sage Foundation Journal of the Social Sciences,* 8(5), 67–95. https://doi.org/10.7758/RSF.2022.8.5.04. 
+
+*Living Wage Calculator.* (n.d.). Retrieved May 5, 2024, from https://livingwage.mit.edu/pages/methodology. 
+
+Pearce, D. M. (n.d.). *The Self-Sufficiency Standard for Virginia 2012.*  
+
+*Washington—Self Sufficiency Standard.* (2021, September 8). https://selfsufficiencystandard.org/washington/, https://selfsufficiencystandard.org/washington/
