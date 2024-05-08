@@ -1,0 +1,452 @@
+---
+title: "Economic Self-Sufficiency in the Charlottesville-Albemarle"
+date: "May 2024"
+author: "Sydnee Pottebaum, Sophia Marcus, and Kaleigh Mullins"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+
+```{r libraries}
+library(tidyverse)
+library(janitor)
+library(reactable)
+library(reactablefmtr)
+library(rcartocolor)
+library(knitr)
+library(ggforce)
+library(scales) 
+library(ggthemes)
+library(RColorBrewer)
+library(viridis)
+library(ggridges)
+library(rcartocolor)
+library(wesanderson)
+library(ghibli)
+library(scales)
+```
+
+```{r data}
+pums_below_lw <- readRDS("../data/pums_below_lw.RDS")
+cvl_mit_lws <- read_csv("../data/cvlregion_mitlivingwagestandards.csv")
+```
+
+## Living Below the Economic Self-Sufficiency Standard in the Charlottesville-Albemarle Region
+Economic self-sufficiency can take many forms. However, most researchers define economic self-sufficiency as families being able to afford the basic necessities of life at a certain threshold. This means that families should not be spending over a certain percentage of their income on basic necessities. For example, in one study, the U.S. Department of Health and Human Resources defined achieving economic self-sufficiency as achieving a middle-class status and having a household income above 300 percent of the federal poverty level.[^1] However, many more factors can go into achieving economic self-sufficiency. Another study defined economic self-sufficiency as the ability to cover a basic family budget with labor-market earnings. A basic family budget includes items such as housing, food, medical care, transportation, childcare, and other household expenses.[^2] It is important that families are able to afford everything they need to have a high quality life. 
+
+This analysis attempts to describe the individuals and families who are most affected by living below the economic self-sufficiency standard in the Charlottesville region of Virginia. This region includes the City of Charlottesville and Ablemarle, Fluvanna, Greene, Louisa, and Nelson counties. 
+
+
+### About the Authors
+Kaleigh Mullins, Sophia Marcus, and Sydnee Pottebaum are all graduate students the Frank Batten School for Leadership and Public Policy. They will be graduating in May 2024 with Masters of Public Policy degrees.
+
+### About the Data
+The data used for this analysis includes the U.S. Census Bureau's American Community Survey public-use microdata sample for the Charlottesville region and the Massachusetts Institute of Technology's (MIT) economic self-sufficiency threshold data. The microdata sample allows to estimate the prevalence of people and household characteristics in our region, including wages, occupation, children, and types of home.[^3] The MIT economic self-sufficiency threshold data provides the living wage that full-time workers need to cover or support the costs of their families' basic needs.[^4] MIT factors in geographically-specific costs for food, childcare, health care, housing, transportation, and other basic needs for 12 different family types in 3,143 counties in in the United States. Using these two data sources allows us to paint a picture of those struggling most in our community, hopefully providing a blueprint for policymakers to build equitable policy when attempting to help those most vulnerable.
+
+
+The following table displays the income needed for types of families to meet the economic self-sufficiency standards, per MIT's data collection. 
+
+```{r mit standards table}
+cvl_mit_lws <- cvl_mit_lws %>% 
+  mutate(across(albemarle:nelson, label_currency()))
+
+cvl_mit_lws <- cvl_mit_lws %>%
+  mutate(famtype = fct_recode(famtype,
+                              "1 Working Adult, No Children" = "a1w1c0",
+                              "1 Working Adult, 1 Child" = "a1w1c1",
+                              "1 Working Adult, 2 Children" = "a1w1c2",
+                              "1 Working Adult, 3 Children" = "a1w1c3",
+                              "2 Adults (1 Working), No Children" = "a2w1c0",
+                              "2 Adults (1 Working), 1 Child" = "a2w1c1",
+                              "2 Adults (1 Working), 2 Children" = "a2w1c2",
+                              "2 Adults (1 Working), 3 Children" = "a2w1c3",
+                              "2 Working Adults, No Children" = "a2w2c0",
+                              "2 Working Adults, 1 Child" = "a2w2c1",
+                              "2 Working Adults, 2 Children" = "a2w2c2",
+                              "2 Working Adults, 3 Children" = "a2w2c3"))
+
+kable(cvl_mit_lws[1:7], col.names = c("Family Type", "Albemarle", "Charlottesville", "Fluvanna", "Greene", "Louisa", "Nelson"))
+```
+
+## Descriptive Statistics of Those of Working Age Below the Economic Self-Sufficiency Threshold in the Charlottesville-Albemarle Region
+
+This table provides descriptive statistics for eight different family types living below the economic self-sufficiency standard in the Charlottesville-Albemarle region. Note that "2 Adult, No Children" families make up the majority of the dataset. We hypothesize this is because the large number of retired couples in this age group. In the last column of this table, you can see that 42% of "2 Adult, No Children" families are retired while their median age is 62 years old.
+```{r reactable}
+sufficiency_table <- pums_below_lw %>% 
+  mutate(family_type = fct_recode(family_type,
+                                  "1 Adult, No Children" = "a1c0",
+                                  "1 Adult, 1 Child" = "a1c1",
+                                  "1 Adult, 2 Children" = "a1c2",
+                                  "1 Adult, 3 Children" = "a1c3",
+                                  "2 Adults, No Children" = "a2c0",
+                                  "2 Adults, 1 Child" = "a2c1",
+                                  "2 Adults, 2 Children" = "a2c2",
+                                  "2 Adults, 3 Children" = "a2c3")) %>% 
+  filter(!is.na(family_type), agep > 16) %>% 
+  group_by(serialno) %>% 
+  mutate(num_working = sum(esr %in% 1,2,4,5)) %>% 
+  ungroup() %>% 
+  group_by(family_type) %>% 
+  summarize(families = n(),
+            med_wages = median(wagp, na.rm = TRUE),
+            mean_wages = mean(wagp, na.rm = TRUE),
+            med_hincp = median(hincp, na.rm = TRUE),
+            mean_hincp = mean(hincp, na.rm = TRUE),
+            numbernonwhite = sum(rac1p > 1)/families,
+            med_age = median(agep, na.rm = TRUE),
+            haveahsdegree = sum(schl > 18)/families,
+            prop_own = sum(ten < 3)/families,
+            averageinconrent = mean(grpip/100, na.rm = TRUE),
+            prop_retired = sum(wif < 1)/families)
+
+reactable(sufficiency_table,
+          columns = list(
+            family_type = colDef(name = "Family Type"),
+            families = colDef(name = "Number of Families"), 
+            med_wages = colDef(name = "Median Wages",
+                               format = colFormat(prefix = "$", separators = TRUE)),
+            mean_wages = colDef(name = "Average Wages",
+                                format = colFormat(prefix = "$", separators = TRUE, digits = 0)),
+            med_hincp = colDef(name = "Median Household Income", 
+                                 format = colFormat(prefix = "$", separators = TRUE, digits = 0)),
+            mean_hincp = colDef(name = "Average Household Income", 
+                                format = colFormat(prefix = "$", separators = TRUE, digits = 0)),
+            numbernonwhite = colDef(name = "% Families of Color",
+                                    format = colFormat(percent = TRUE, digits = 1)),
+            med_age = colDef(name = "Median Age", 
+                             format = colFormat(digits = 0)),
+            haveahsdegree = colDef(name = "% with HS Diploma/GED",
+                                   format = colFormat(percent = TRUE, digits = 1)),
+            averageinconrent = colDef(name = "% of Monthly Income Spent on Rent",
+                                      format = colFormat(percent = TRUE, digits = 1)),
+            prop_own = colDef(name = "% who Own Their Home",
+                              format = colFormat(percent = TRUE, digits = 1)),
+            prop_retired = colDef(name = "% Who Are Retired", 
+                                  format = colFormat(percent = TRUE, digits = 1))),
+columnGroups = list(
+      colGroup(name = "Wages", columns = c("med_wages", "mean_wages")),
+      colGroup(name = "Household Income", columns = c("med_hincp", "mean_hincp"))),
+showSortable = TRUE, bordered = TRUE, highlight = TRUE, striped = TRUE)
+```
+
+## Visualizing Those Living Below the Living Wage in the Region
+
+In order to best understand the data, our team wanted to understand basic demographic features of those living below the living wage standard. The following graphs chronical those discoveries and provide a necessary backdrop for understanding those in the Charlottesville-Albemarle region living below this threshold.
+
+### Age below the Living Wage
+
+This graph was important for us to include, as it shows an age breakdown by family type. When we first looked at this dataset, we saw that a large portion of those under the living wage standard were two adult, no children families. We decided to investigate this further, finding that most of those in this family type were on the older side, peaking at around 75 years old. As a result, we hypothesized that the reason many of these households are under the standard is due to their retirement status. We suggest further research be done to not include this subset to get a less skewed version of this dataset, as we did not have the time to do so.
+
+```{r k graph 1}
+pums_below_lw %>% 
+  ggplot(aes(x = agep)) +
+  geom_histogram(fill = "#0072B2") +
+  facet_wrap(~family_type) +
+  labs(title = "Age by Family Type",
+       x = "Age", y = "Number of People")
+```
+
+
+### Race below the Living Wage
+
+This data visual shows us that most of the dataset is white. This is representative of the greater Charlottesville-Albemarle region, which is 68.5% and 81.1% white, respectively, according to Census.gov.[^5] Black residents are also meaningfully represented in the data, as their share is representative of the region, as well. It is important to note that the racial makeup of this data is closer to representing Albemarle more so than Charlottesville, again according to the Census.[^5] 
+
+```{r k2}
+pums_below_lw <- pums_below_lw %>% 
+  mutate(hhldrrac1p = case_when(
+    hhldrrac1p == 1 ~ "White",
+    hhldrrac1p == 2 ~ "Black",
+    hhldrrac1p == 3 ~ "AmericanIndian",
+    hhldrrac1p == 4 ~ "AlaskaNative",
+    hhldrrac1p == 5 ~ "AmericanIndianAlaskaNative",
+    hhldrrac1p == 6 ~ "Asian",
+    hhldrrac1p == 7 ~ "NativeHawaiian",
+    hhldrrac1p == 8 ~ "Other",
+    hhldrrac1p == 9 ~ "TwoOrMore",
+  ),
+  hhldrrac1p = factor(hhldrrac1p))
+
+pums_below_lw %>%
+  ggplot(aes(x = hhldrrac1p)) + 
+  geom_bar(fill = "#0072B2") +
+  scale_x_discrete(name = "Race") +
+  guides(x = guide_axis(angle = 35)) +
+  labs(title = "Race of those Below the Living Wage",
+       x = "Race", y = "Number of People") 
+```
+
+### Income below the Living Wage
+
+This graph looks at the spread of income for those below the living wage standard. We wanted to see if there was wide variations among family type as far as income went. As evident in the visualization, those in a two adult, two children families are most likely to be in the higher end of the income scale. Those in two adult, no children families settle around the $50,000 level. Due to the the sample of other families being so small, there is a lot of variation. But, it is hard to determine whether that is representative of the families or just the small sample present. 
+
+```{r k3}
+pums_below_lw %>%
+  ggplot(aes(x = hincp)) +
+  geom_histogram(fill = "#0072B2") +
+  facet_wrap(~family_type) +
+  xlim(0, 100000) +
+  coord_flip() +
+  labs(title = "Income by Family Type",
+       x = "Income", y = "Number of People")
+```
+
+### Income Density below the Living Wage
+
+The following graph shows income by density, which is a better visualization of income under the living wage standard for many of the family types with smaller samples. For example, it shows that one adult, no children familes are the most likely to have the lowest income. Furthermore, two adult, three children and one adult, two children households have the most spread across different income bands. Finally, as evident by the other visualization of income, two adults, two children families have the highest income cluster of any other family type.  
+
+```{r k5}
+pums_below_lw %>%
+  ggplot(aes(x = hincp, y = family_type, fill = family_type)) +
+  geom_density_ridges(alpha = 1/5)  +
+  xlim(0, 150000) +
+  labs(title = "Income by Family Type",
+       x = "Income", y = "Family Type")
+```
+
+## The Most Affected Populations
+
+### Comparing Average Household Income By Race Using Bar Graph
+
+The graph below uses a simple bar graph to compares household income by racial identity but tells a very compelling story. There are nine racial identities utilized within the American Community Survey, however, the majority of respondents represented in the Charlottesville region identify as White, Black, or Asian. Importantly, this graph provides evidence of a stark difference in average income among Black residents and White residents living below the MIT economic self-sufficiency threshold. This graph aligns with the racial and economic disparities that have been present in the Charlottesville region for decades. Specifically, O'Hare and Mitchell (2019), discuss how the demographics within Charlottesville's historic neighborhoods are changing.[^6] The researchers who created a novel dashboard that aggregates data on Charlottesville's most vulnerable populations and humanizes their experiences by incorporating individual stories. Interestingly, the researchers note that while household income within the Charlottesville region has increased on average, incomes by race remain disparate.[^6] Additionally, rents in Charlottesville have increased disproportionately to income increases, further perpetuating cycles of poverty among minoritized communities.        
+
+```{r sm graph 1}
+pums_below_lw_by_race <-pums_below_lw %>% 
+  filter(hhldrrac1p %in% c("White","Black", "AmericanIndian", "Other", "Asian", "AlaskaNative", "TwoMore", "AmericanIndianAlaskaNative", "NativeHawaiian")) %>%
+  group_by(hhldrrac1p) %>% 
+  summarize(total = n(),
+            mean_hincp = mean(hincp, na.rm = TRUE),
+            med_hincp = median(hincp, na.rm = TRUE)) 
+
+pums_below_lw_by_race %>%
+  ggplot(aes(x = mean_hincp, y = hhldrrac1p, fill = hhldrrac1p )) +
+  scale_fill_manual(values = wes_palette("FantasticFox1", 9, "continuous")) +
+  geom_col()+
+  labs(title = "Average Household Income by Race",
+       subtitle = "Among Households Living Below the Living Wage Standard",
+       caption = "Source: American Community Survey, PUMS",
+       x = "Average Household Income", y = "Race",
+       color = "Locality") +
+  coord_flip() +
+  guides(x = guide_axis(angle = 35))
+```
+       
+### Comparing Household Income By Race Using Sina Plot
+
+While this graph utilizes the same data to portray the differences in household income by racial identity, this graph alternatively uses a sina plot to show the density of household income by race, showing around which income amount the average household hovers. Importantly, the graph shows that white households are most dense around the 60,000 USD demarcation, whereas black households are visibly most densely populated around 25,000 USD. This graph complements the previous graph's narrative. Matthew (2019), discusses the racial disparities in wealth income in the Charlottesville region follow a racialized pattern, asserting that the "gap" in income, educational attainment, and employment are representative of the region's history of segregation and violence.[^7] Additionally, Eppard et al. (2021) explored various drivers of inequality in the State of Virginia, specifically indicating that low-income men in Virginia are less likely to achieve social and economic mobility relative to the rest of the country.[^8] Furthermore, Eppard et al. find that 89 percent of counties in Virginia that have a history of racial segregation, and thus are predominately black populations, fall below the national average income.
+
+```{r sm graph 2}
+
+pums_below_lw %>% 
+  group_by(serialno) %>% 
+  slice(1) %>% 
+  filter(!is.na(hhldrrac1p), hincp < 200000) %>% 
+  ggplot(aes(x = hincp, 
+             y = hhldrrac1p, color = hhldrrac1p)) +
+  geom_sina(size = 1, alpha = 1/2) + 
+  scale_fill_viridis(discrete = TRUE) +
+  guides(color = "none") + 
+  labs(title = "Household Income by Race",
+       subtitle = "Among Households Living Below the Living Wage Standard",
+       caption = "Source: American Community Survey, PUMS",
+       x = "Household Income", y = "Race",
+       color = "Locality")
+```
+
+
+### Comparing Household Income By Household Type Using Sina Plot
+
+The following graph uses a sina plot to depict the difference in household income by household type. The data was reduced to only include households that are families, including married couple households, single-male households, and single-female households. Importantly, this graph shows not only that income among married couple households is greater than that of single males or single females, but also that the majority of married couples households center around 50,000 USD. Although this graph continues to depict those who fall below the economic self-sufficiency threshold, families with a married couple are more likely to have a greater household income, relative to single parent households. This is a very important finding considering that the wealth and welfare of single parent households remain major indicators of upward mobility and future income of children. In fact, Eppard et al. identified single parenthood as the strongest predictor of upward mobility.[^8] The vast majority of single parent households in the Charlottesville region are woman-led, however, the graph below indicates that most single women-led households mostly hover around 30,000 USD in household income compared to that of 50,000 for families led by a married couple. This has important implications specifically for single parent households led by women in that there is a substantial income gap between single-mother and single-father households that has bearings on children's educational attainments and future incomes.[^8] For example, single-mother households receive less benefits for their children relative to single-father households.[^8] Additionally, single-mother households are penalized more for having children such that for each additional child, single mothers receive a decrease in income, whereas single fathers experience an increase in income for each additional child.[^8]
+
+```{r sm graph 3}
+pums_below_lw <- pums_below_lw %>% 
+  mutate(hht = case_when(
+    hht == 1 ~ "MarriedFamily",
+    hht == 2 ~ "SingleMaleFamily",
+    hht == 3 ~ "SingleFemaleFamily",
+  ),
+  hht = factor(hht))
+
+pums_below_lw %>% 
+  group_by(serialno) %>% 
+  slice(1) %>% 
+  filter(!is.na(hht), hincp < 200000) %>% 
+  ggplot(aes(x = hincp, 
+             y = hht, color = hht)) +
+  geom_sina(size = 1, alpha = 1/2) + 
+  scale_fill_viridis(discrete = TRUE) +
+  guides(color = "none") + 
+  labs(title = "Household Income by Household Type",
+       subtitle = "Among Households Living Below the Living Wage Standard",
+       caption = "Source: American Community Survey, PUMS",
+       x = "Household Income", y = "Household Type",
+       color = "Locality")
+```
+
+### Comparing Household Income By Educational Attainment Using Sina Graph
+
+The following graph uses a sina plot to depict the difference in household income by educational attainment. Interestingly, the majority of respondents of in the data hold a High School Diploma as their maximum level of educational attainment. As seen in the graph, those who hold a Bachelor's degree, Master's degree, and those who completed one year of college but did not receive a diploma have higher household incomes relative to those with a High School Diploma. This finding has grave implications on those whose maximum level of educational attainment is a High School Diploma. In 2016, the Commonwealth Institute reported that Virginia schools were becoming increasingly more segregated, unequal, and isolated by race.[^9] As more schools in Virginia become isolated economically and racially, low-income families face an inequitable distribution of resources and reduced quality of teachers relative to higher-income schools attended predominately by white students.[^8] As educational attainment repeatedly shows to be an indicator of future income, as well as a veritable barrier to income equality, this graph is crucial to evaluate when considering how to mitigate income inequality by increasing the quality and attainability of education regardless of race and socio-economic status.       
+
+```{r sm graph 4}
+pums_below_lw <-pums_below_lw %>% 
+  mutate(schl = case_when(
+    schl == 01 ~ "None",
+    schl == 02 ~ "Nursery",
+    schl == 03 ~ "Kindergarten",
+    schl == 04 ~ "Grade1",
+    schl == 05 ~ "Grade2",
+    schl == 06 ~ "Grade3",
+    schl == 07 ~ "Grade4",
+    schl == 08 ~ "Grade5",
+    schl == 09 ~ "Grade6",
+    schl == 10 ~ "Grade7",
+    schl == 11 ~ "Grade8",
+    schl == 12 ~ "Grade9",
+    schl == 13 ~ "Grade10",
+    schl == 14 ~ "Grade11",
+    schl == 15 ~ "Grade12NoDiploma",
+    schl == 16 ~ "HSDiploma",
+    schl == 17 ~ "GED",
+    schl == 18 ~ "SomeCollege",
+    schl == 19 ~ "OnePlusYearCollegeNoDegree",
+    schl == 20 ~ "Associates",
+    schl == 21 ~ "Bachelors",
+    schl == 22 ~ "Masters",
+    schl == 23 ~ "ProfessionalBeyond",
+    schl == 24 ~ "Doctorate",
+    
+  ),
+  schl = factor(schl))
+
+pums_below_lw %>% 
+  group_by(serialno) %>% 
+  slice(1) %>% 
+  filter(!is.na(schl), hincp < 200000) %>% 
+  ggplot(aes(x = hincp, 
+             y = schl, color = schl)) +
+  geom_sina(size = 1, alpha = 1/2) + 
+  scale_fill_viridis(discrete = TRUE) +
+  guides(color = "none") + 
+  labs(title = "Household Income by Educational Attainment",
+       subtitle = "Among Households Living Below the Living Wage Standard",
+       caption = "Source: American Community Survey, PUMS",
+       x = "Household Income", y = "Educational Attainment",
+       color = "Locality")
+```
+
+### Comparing Household Income By Tenure Type Using Sina Plot 
+
+The following graph uses a sina plot to depict the difference in household income by tenure type. The American Community Survey includes four different tenure types, including rented, occupied without payment of rent, owned with mortgage or loan, and owned free and clear. The graph indicates that households who rent receive far lower income relative to households who own with a mortgage or own free and clear. This finding has important implications on economic self-sufficiency as low-income households and those who live below the economic self-sufficiency threshold have a higher propensity to be rent-burdened, i.e., those who spend more than 30 percent of their incomes on rent and utilities.[^8] As seen in the graph, the majority of households who own with a mortgage or loan, in addition to those who own free, are mostly populated over the 50,000 USD demarcation, while the majority of households who rent hover around 25,000 USD. These results perhaps imply that households who rent and concurrently receive lower incomes, face more barriers to achieving economic self-sufficiency relative to those who own.   
+
+```{r sm graph 5}
+
+pums_below_lw <- pums_below_lw %>% 
+  mutate(ten = case_when(
+    ten == 1 ~ "OwnWithMortgage",
+    ten == 2 ~ "OwnFree",
+    ten == 3 ~ "Rent",
+    ten == 4 ~ "OccupiedWithoutRent",
+  ),
+  ten = factor(ten))
+
+pums_below_lw %>% 
+  group_by(serialno) %>% 
+  slice(1) %>% 
+  filter(!is.na(ten), hincp < 250000) %>% 
+  ggplot(aes(x = hincp, 
+             y = ten, color = ten)) +
+  geom_sina(size = 1, alpha = 1/2) + 
+  scale_fill_viridis(discrete = TRUE) +
+  guides(color = "none") + 
+  labs(title = "Household Income by Tenure Type",
+       subtitle = "Among Households Living Below the Living Wage Standard",
+       caption = "Source: American Community Survey, PUMS",
+       x = "Household Income", y = "Tenure Type",
+       color = "Locality")
+```
+
+
+### The Most Affected Populations: Comparing Percent of Households Who Rent By Race Using Bar Graph
+
+The following graph utilizes a bar graph to depict the percent of households who rent by race. This graph is perhaps one of the most important representations of housing inequality that prevails in the United States. Researchers a variety of domains, policy analysts, as well as social activists have all cited housing as the root of wealth inequality in the United States. [^10] Crislip (2021) analyzes the persistence of housing inequality in Richmond and its impact on low-income households. Richmond, home to the second highest eviction rate in the country, exceeds the national average by four times.[^10] Across the state of Virginia, there is a 25 percent gap between home ownership among white households and black households, which consequently undermines black wealth and perpetuates generational poverty. The graph below indicates that compared to 25 percent of white households, 50 percent of black households living below the economic self-sufficiency threshold are renters. This stark difference is representative of the barriers that low-income minority households face in accessing affordable home ownership. Crislip (2021) notes that home ownership is a veritable mechanism that can propel families out of poverty, send one's kids to college, leverage equity to start a small business, and retire safely.[^10] Importantly, the disparity among households who rent by race is not entirely indicative of income, rather, there are a variety of structural and institutional barriers that impeded black home ownership, including redlining and discriminatory practices implemented by banks and insurance companies. It is imperative that policy makers address the prevalence of institutionalized racial-ethnic stratification that advantages some groups over others. 
+
+The final graph provided below shows that nearly 50 percent of white households in the greater Charlottesville area own with a mortgage compared to less than 37.5 percent of black households. As previously mentioned, the implications of inequity in the housing market are profound. Thomas et al. (2017) found significant racial differences in housing values. While economic shocks such as the Great Recession between 2007 and 2009 exacerbated racial disparities in housing value, Thomas et al.found that even when controlling for economic shocks, homes owned by black households are valued significantly less relative to their high socio-economic status white counterparts.[^11] Furthermore, as housing segregation increases, the value of homes owned by black households decreases precipitously. These findings complement the graphs below and further justify the need for inclusive, adaptive, and transformative policy action.             
+
+```{r sm graph 6}
+pums_below_lw %>% 
+  group_by(hhldrrac1p) %>% 
+  filter(hhldrrac1p %in% c("White","Black", "AmericanIndian", "Other", "Asian", "TwoMore","AmericanIndianAlaskaNative")) %>%
+  summarize(hht = n(),
+            pay_rent = sum(ten == "Rent"),
+            per_pay_rent = pay_rent/hht) %>% 
+  ggplot(aes(x = hhldrrac1p, y = per_pay_rent, fill = hhldrrac1p)) +
+  geom_col() +
+  scale_fill_manual(values = wes_palette("FantasticFox1", 8, "continuous")) +
+  labs(title = "Percent of Households Who Rent by Race",
+       subtitle = "Among Households Living Below the Living Wage Standard",
+       caption = "Source: American Community Survey, PUMS",
+       x = "Race", y = "Households Who Rent (%)",
+       color = "Locality") +
+  guides(x = guide_axis(angle = 35))
+```
+
+
+### Comparing Percent of Households Who Own With Mortgage By Race Using Bar Graph
+
+```{r sm graph 7}
+
+pums_below_lw %>% 
+  group_by(hhldrrac1p) %>%
+  filter(hhldrrac1p %in% c("White","Black", "AmericanIndian", "Other", "Asian", "TwoMore", "NativeHawaiian")) %>%
+  summarize(hht = n(),
+            own_mortgage = sum(ten == "OwnWithMortgage"),
+            per_own_mortgage = own_mortgage/hht) %>% 
+  ggplot(aes(x = hhldrrac1p, y = per_own_mortgage, fill = hhldrrac1p)) +
+  geom_col() +
+  scale_fill_manual(values = wes_palette("FantasticFox1", 8, "continuous")) +
+  labs(title = "Percent of Households Who Own With Mortgage by Race",
+       subtitle = "Among Households Living Below the Living Wage Standard",
+       caption = "Source: American Community Survey, PUMS",
+       x = "Race", y = "Households Who Own With Mortgage (%)",
+       color = "Locality") +
+  guides(x = guide_axis(angle = 35))
+```
+
+## Conclusion
+This report evaluates the experience of households living below the economic self-sufficiency threshold in the greater Charlottesville region and makes meaningful contributions to understanding the economic, racial, and social disparities that exist among these households. This report initially defines economic self-sufficiency and conveys its importance in personal and household-level welfare. Additionally, we include a variety of indicators to statistically describe households living below the economic self-sufficiency threhold, as defined by MIT, and provide several visualizations that depict the distribution of households based upon demographic indicators such as race, age, and income level. Finally, we explore the prevalence of income inequality and housing inequality, in addition to a variety of other disparities. This report aspires to humanize the households, families, and individuals living below their respective level of need. While the empirical evidence provided in this report is a laudable contribution, further research must be done to augment the public’s understanding of structural and institutional barriers that perpetuate inequity and cycles of poverty within low-income neighborhoods and counties across the country. Specifically, further research should address the retiree population living below MIT’s economic self-sufficiency threshold as it can skew or complicate conclusions and perceptions of those represented by the data. Finally, this report provides evidence that to alleviate poverty and promote economic mobility and economic selef-sufficiency, policy makers must reform the structural and institutional inequities that disproportionately impact low-income, single-parent families of color in the greater Charlottesville area. 
+
+
+## References
+[^1]. Inanc, H., Spitzer, A., & Starks, B. (September 2023). What influences the success sequence and economic self-sufficiency? Findings from a mixed-method study. OPRE Report #1013-051, Washington, DC: Office of Planning Research, and Evaluation, Administration for Families, U.S. Department of Health and Human Services. https://www.acf.hhs.gov/sites/default/files/documents/opre/Success%20Sequence%20Report%202023.pdf
+
+[^2]. Joshi, P., Walters, A. N., Noelke, C., & Acevedo-Garcia, D. (2022). Families’ job characteristics and economic self-sufficiency: Differences by income, race-ethnicity, and nativity. The Russell Sage Foundation Journal of the Social Sciences 8(5), 67-95. https://www.rsfjournal.org/content/rsfjss/8/5/67.full.pdf
+
+[^3]. United States Census Bureau. (2022) Public use microdata sample. 
+https://www.census.gov/programs-surveys/acs/microdata.html
+
+[^4]. Massachusetts Institute of Technology. (2023). Living wage calculator. https://livingwage.mit.edu/states/51/locations
+
+[^5]. Census.gov. (2023). Census QuickFacts. https://www.census.gov/quickfacts/fact/table/charlottesvillecityvirginia,albemarlecountyvirginia,VA,US/PST045223 
+
+[^6]. O'Hare, E. & Mitchell, E. (October 2022). A decade of data tells a story of how Charlottesville’s neighborhoods are changing. Charlottesville Tomorrow.
+https://www.cvilletomorrow.org/a-decade-of-data-tells-a-story-of-how-charlottesvilles-neighborhoods-are-changing/ 
+  
+[^7]. Matthew, D. (April 2019). On Charlottesville. Virginia Law Review. https://www.jstor.org/stable/26842240?casa_token=OJf_0TE6dvAAAAAA%3AcMfxaEqpz6gPiFZTGTGsxnz8pOs_1QOvbLrq2T7eHtCVlafeCKaDJllGraib0uDZRYt5LQPCoXZHX5rKwRzJ_MPr-59PIVWtKAqsSEZOkjgzR4oRpglx&seq=1  
+
+[^8]. Eppard, L. et al. (December 2021). Social and Economic Costs of Inequality in the State of Virginia. Journal of Working-Class Studies. Volume 6, Issue 2. 
+https://journals.uwyo.edu/index.php/workingclassstudies/article/view/6837/5707 
+
+[^9]. Increasingly Separate and Unequal in U.S. and Virginia Schools. (November 2016). The Commonwealth Institute.
+https://thecommonwealthinstitute.org/research/increasingly-separate-and-unequal-in-u-s-and-virginia-schools/ 
+
+[^10]. Crislip, H. (2021).Housing is the Root of Wealth Inequality: Building an Equitable Richmond. Richmond Racial Equity Essays. 
+https://scholarscompass.vcu.edu/cgi/viewcontent.cgi?article=1004&context=richmondracialequityessays_essays 
+
+[^11]. Thomas, M. et al. (June 2017). Separate and Unequal: The Impact of Socioeconomic Status, Segregation, and the Great Recession on Racial Disparities in Housing Values. Journals of the American Sociological Association.
+https://journals.sagepub.com/doi/full/10.1177/2332649217711457?casa_token=s_N87IiVo88AAAAA%3Ad-vjViwL97j1bKlTuSlcNAoAWb0bZeO_FUxEc-en7P3wijQzoTNOmh1C4qc9BNLtPSf9ZdgItLzzoQ 
